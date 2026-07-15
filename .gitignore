@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Django
+db.sqlite3
+/media/
+/protected_media/
+/staticfiles/
+
+# Tailwind output (built artifact)
+/static/css/app.css
+
+# OS / editor
+.DS_Store
+Thumbs.db

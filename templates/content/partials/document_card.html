@@ -1,0 +1,21 @@
+{% load i18n %}
+<article class="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-brand-300 hover:shadow-md">
+  <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+    <span class="material-symbols-outlined">description</span>
+  </div>
+  <div class="min-w-0 flex-1">
+    <h3 class="font-semibold text-slate-900">{{ doc.title }}</h3>
+    {% if doc.description %}
+      <p class="mt-0.5 line-clamp-2 text-sm text-slate-500">{{ doc.description }}</p>
+    {% endif %}
+    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+      <span class="rounded bg-slate-100 px-1.5 py-0.5 font-semibold uppercase text-slate-600">{{ doc.extension|default:"file" }}</span>
+      <span>{{ doc.size_display }}</span>
+      <span>{{ doc.uploaded_at|date:"d/m/Y" }}</span>
+    </div>
+  </div>
+  <a href="{{ doc.get_download_url }}" class="btn-primary shrink-0 !px-4 !py-2 text-sm" aria-label="Λήψη {{ doc.title }}">
+    <span class="material-symbols-outlined text-base">download</span>
+    <span class="hidden sm:inline">Λήψη</span>
+  </a>
+</article>

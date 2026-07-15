@@ -1,0 +1,19 @@
+{
+  "name": "Νικόλαος Καραγκιαούρης — Ναυπηγός & Μηχανολόγος Μηχανικός",
+  "short_name": "Ν. Καραγκιαούρης",
+  "icons": [
+    {
+      "src": "/static/favicon_io/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/favicon_io/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#0284c7",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

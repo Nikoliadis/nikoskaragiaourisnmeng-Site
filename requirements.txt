@@ -1,0 +1,10 @@
+asgiref==3.12.1
+Django==6.0.7
+django-htmx==1.28.0
+django-unfold==0.100.0
+filetype==1.2.0
+pillow==12.3.0
+pytailwindcss==0.3.1
+python-dotenv==1.2.2
+sqlparse==0.5.5
+tzdata==2026.3

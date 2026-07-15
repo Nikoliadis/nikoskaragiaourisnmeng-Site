@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ announcement.title }} — Νικόλαος Καραγκιαούρης{% endblock %}
+
+{% block content %}
+<article class="container-page max-w-3xl py-12">
+  <nav class="mb-4 text-sm text-slate-400"><a href="{% url 'content:announcements' %}" class="hover:text-brand-600">← Ενημέρωση</a></nav>
+  <time class="text-sm text-slate-400">{{ announcement.created_at|date:"d F Y" }}</time>
+  <h1 class="mt-1 text-3xl font-bold text-slate-900">{{ announcement.title }}</h1>
+  {% if announcement.image %}
+    <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}" class="mt-6 w-full rounded-xl object-cover">
+  {% endif %}
+  <div class="prose-content mt-6 text-slate-700">{{ announcement.content|safe }}</div>
+</article>
+{% endblock %}

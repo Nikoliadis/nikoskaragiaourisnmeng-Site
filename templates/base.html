@@ -1,0 +1,63 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="el" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Νικόλαος Καραγκιαούρης — Μηχανολόγος ΠΕ82{% endblock %}</title>
+  <meta name="description" content="{% block description %}Εκπαιδευτικό υλικό Μηχανολογίας: πανελλαδικές εξετάσεις, ασκήσεις, e-books και ανακοινώσεις.{% endblock %}">
+
+  <link rel="icon" href="{% static 'favicon_io/favicon.ico' %}" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon_io/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon_io/favicon-16x16.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'favicon_io/apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'favicon_io/site.webmanifest' %}">
+  <meta name="theme-color" content="#0284c7">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="flex min-h-full flex-col font-sans">
+  {% include "partials/navbar.html" %}
+
+  <main class="flex-1">
+    {% if messages %}
+      <div class="container-page mt-4 space-y-2">
+        {% for message in messages %}
+          <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "partials/footer.html" %}
+
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script>
+    // Mobile menu + dropdown toggles (vanilla, no framework).
+    document.addEventListener("click", (e) => {
+      const toggle = e.target.closest("[data-toggle]");
+      const target = toggle && document.getElementById(toggle.dataset.toggle);
+      if (target) {
+        e.preventDefault();
+        target.classList.toggle("hidden");
+      }
+      // Close open dropdowns when clicking elsewhere.
+      if (!e.target.closest("[data-dropdown]")) {
+        document.querySelectorAll("[data-dropdown-menu]").forEach((m) => m.classList.add("hidden"));
+      }
+      const dd = e.target.closest("[data-dropdown]");
+      if (dd) {
+        const menu = dd.querySelector("[data-dropdown-menu]");
+        document.querySelectorAll("[data-dropdown-menu]").forEach((m) => { if (m !== menu) m.classList.add("hidden"); });
+        if (menu) menu.classList.toggle("hidden");
+      }
+    });
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
