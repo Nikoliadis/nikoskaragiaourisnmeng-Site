@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from .sanitizer import clean_html
 from .storage import protected_storage, uuid_upload_to
 from .validators import detect_content_type, validate_upload
 
@@ -177,6 +178,9 @@ class Announcement(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = unique_slug(self, self.title)
+        # Sanitised on the way in, so the template renders content that has
+        # already had scripts and event handlers removed.
+        self.content = clean_html(self.content)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

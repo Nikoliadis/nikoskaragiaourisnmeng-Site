@@ -9,6 +9,7 @@ venv/
 /Database/db.sqlite3
 /Database/media/
 /Database/protected_media/
+/Database/logs/
 
 # Frontend build artifacts
 /Frontend/staticfiles/

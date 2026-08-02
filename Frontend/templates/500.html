@@ -1,0 +1,24 @@
+{% load static %}<!DOCTYPE html>
+{% comment %}
+Standalone on purpose. Django renders 500.html without context processors, so
+anything depending on the navbar context could raise a second error while
+reporting the first. It also says nothing about what actually failed.
+{% endcomment %}
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Κάτι πήγε στραβά — Νικόλαος Καραγκιαούρης</title>
+  <link rel="icon" href="{% static 'favicon_io/favicon.ico' %}" sizes="any">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 text-center font-sans">
+  <p class="text-6xl font-bold text-brand-600">500</p>
+  <h1 class="mt-4 text-2xl font-bold text-slate-900">Κάτι πήγε στραβά</h1>
+  <p class="mt-2 max-w-md text-slate-500">
+    Παρουσιάστηκε πρόβλημα στον διακομιστή. Το σφάλμα καταγράφηκε και θα το δούμε.
+    Δοκίμασε ξανά σε λίγο.
+  </p>
+  <a href="/" class="btn-primary mt-8">Αρχική σελίδα</a>
+</body>
+</html>

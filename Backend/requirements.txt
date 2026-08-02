@@ -1,10 +1,23 @@
-asgiref==3.12.1
+# Core
 Django==6.0.7
-django-htmx==1.28.0
-django-unfold==0.100.0
-filetype==1.2.0
-pillow==12.3.0
-pytailwindcss==0.3.1
-python-dotenv==1.2.2
+asgiref==3.12.1
 sqlparse==0.5.5
 tzdata==2026.3
+python-dotenv==1.2.2
+
+# Admin & UI
+django-unfold==0.100.0
+django-htmx==1.28.0
+pytailwindcss==0.3.1
+pillow==12.3.0
+
+# Security
+argon2-cffi==25.1.0          # Argon2id password hashing (OWASP recommended)
+django-csp==4.0              # Content-Security-Policy header
+django-axes==8.3.1           # login throttling / brute-force lockout
+django-ratelimit==4.1.0      # contact form flood protection
+nh3==0.3.6                   # HTML sanitising for admin-written content
+filetype==1.2.0              # magic-byte sniffing for uploads
+
+# Production server — install on the server only:
+#   pip install gunicorn==23.0.0

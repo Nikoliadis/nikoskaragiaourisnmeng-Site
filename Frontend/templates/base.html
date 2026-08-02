@@ -14,10 +14,10 @@
   <link rel="manifest" href="{% static 'favicon_io/site.webmanifest' %}">
   <meta name="theme-color" content="#0284c7">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  {% comment %}
+    Fonts are bundled into app.css from Frontend/static/fonts — nothing is
+    loaded from a CDN, so no visitor data leaves this server.
+  {% endcomment %}
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 <body class="flex min-h-full flex-col font-sans">
@@ -36,28 +36,12 @@
 
   {% include "partials/footer.html" %}
 
-  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-  <script>
-    // Mobile menu + dropdown toggles (vanilla, no framework).
-    document.addEventListener("click", (e) => {
-      const toggle = e.target.closest("[data-toggle]");
-      const target = toggle && document.getElementById(toggle.dataset.toggle);
-      if (target) {
-        e.preventDefault();
-        target.classList.toggle("hidden");
-      }
-      // Close open dropdowns when clicking elsewhere.
-      if (!e.target.closest("[data-dropdown]")) {
-        document.querySelectorAll("[data-dropdown-menu]").forEach((m) => m.classList.add("hidden"));
-      }
-      const dd = e.target.closest("[data-dropdown]");
-      if (dd) {
-        const menu = dd.querySelector("[data-dropdown-menu]");
-        document.querySelectorAll("[data-dropdown-menu]").forEach((m) => { if (m !== menu) m.classList.add("hidden"); });
-        if (menu) menu.classList.toggle("hidden");
-      }
-    });
-  </script>
+  {% comment %}
+    Both scripts are served from this origin: no CDN to be compromised and no
+    inline code, so the CSP needs neither 'unsafe-inline' nor a nonce.
+  {% endcomment %}
+  <script src="{% static 'js/htmx.min.js' %}" defer></script>
+  <script src="{% static 'js/site.js' %}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

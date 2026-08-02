@@ -1,0 +1,55 @@
+# systemd unit για το Gunicorn.
+# Αντιγραφή σε /etc/systemd/system/karagiaouris.service
+#   systemctl daemon-reload
+#   systemctl enable --now karagiaouris
+#
+# Οι επιλογές Protect*/Private* κάνουν το service να τρέχει σε περιορισμένο
+# περιβάλλον: ακόμη κι αν κάποιος εκτελέσει κώδικα μέσα στο Django, δεν βλέπει
+# το υπόλοιπο σύστημα.
+
+[Unit]
+Description=Gunicorn — Εκπαιδευτική ιστοσελίδα Ν. Καραγκιαούρη
+After=network.target
+Requires=karagiaouris.socket
+
+[Service]
+Type=notify
+User=karagiaouris
+Group=www-data
+WorkingDirectory=/srv/karagiaouris/Backend
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=/srv/karagiaouris/.env
+ExecStart=/srv/karagiaouris/venv/bin/gunicorn -c /srv/karagiaouris/deploy/gunicorn.conf.py config.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+# --- Sandboxing ------------------------------------------------------------
+NoNewPrivileges=true          # δεν μπορεί να αποκτήσει δικαιώματα (setuid)
+PrivateTmp=true               # δικό του /tmp, δεν βλέπει άλλων
+PrivateDevices=true
+ProtectSystem=strict          # όλο το σύστημα read-only…
+ProtectHome=true
+ReadWritePaths=/srv/karagiaouris/Database /var/log/gunicorn /run/gunicorn
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true   # δεν επιτρέπει εκτελέσιμη μνήμη προς εγγραφή
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0027
+
+# --- Όρια πόρων ------------------------------------------------------------
+LimitNOFILE=4096
+TasksMax=200
+
+[Install]
+WantedBy=multi-user.target

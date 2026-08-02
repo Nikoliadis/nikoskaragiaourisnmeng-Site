@@ -1,0 +1,6 @@
+{% extends "error.html" %}
+{% block content %}
+{% with error_code="404" error_title="Η σελίδα δεν βρέθηκε" error_message="Ο σύνδεσμος που ακολούθησες μπορεί να έχει αλλάξει ή να μην υπάρχει πια." %}
+  {{ block.super }}
+{% endwith %}
+{% endblock %}

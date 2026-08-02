@@ -10,6 +10,7 @@ The repository is split into three top-level directories:
     Database/   the SQLite file and everything users upload
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -39,19 +40,29 @@ def env_list(name: str, default: str = "") -> list[str]:
 # ---------------------------------------------------------------------------
 # Core security
 # ---------------------------------------------------------------------------
-DEBUG = env_bool("DJANGO_DEBUG", True)
+# Defaults to False: forgetting the variable on a server must not expose
+# tracebacks, settings and SQL to the internet. Local development opts in
+# explicitly through .env.
+DEBUG = env_bool("DJANGO_DEBUG", False)
 
 # In production the key MUST come from the environment: a missing DJANGO_SECRET_KEY
 # would otherwise silently fall back to a value that is public in this repository,
 # which makes sessions and password-reset tokens forgeable.
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
-if not SECRET_KEY:
-    if not DEBUG:
+_KEY_HELP = (
+    "Generate one with: python -c \"from django.core.management.utils import "
+    'get_random_secret_key; print(get_random_secret_key())" and put it in .env.'
+)
+if not DEBUG:
+    # A weak or placeholder key in production makes sessions, password-reset
+    # links and signed cookies forgeable, so refuse to start on one.
+    if not SECRET_KEY:
+        raise ImproperlyConfigured(f"DJANGO_SECRET_KEY is not set. {_KEY_HELP}")
+    if SECRET_KEY.startswith("django-insecure-") or len(SECRET_KEY) < 50:
         raise ImproperlyConfigured(
-            "DJANGO_SECRET_KEY is not set. Generate one with "
-            "`python -c \"from django.core.management.utils import get_random_secret_key;"
-            " print(get_random_secret_key())\"` and put it in your .env file."
+            f"DJANGO_SECRET_KEY looks like a development placeholder. {_KEY_HELP}"
         )
+elif not SECRET_KEY:
     SECRET_KEY = "django-insecure-development-only-key-do-not-use-in-production"
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
@@ -73,6 +84,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party
     "django_htmx",
+    "csp",
+    "axes",
     # Local
     "content",
 ]
@@ -86,7 +99,18 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "content.middleware.AdminAwareCSPMiddleware",
+    "content.middleware.SecurityHeadersMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
+    # Must come last: it needs an authenticated request to record the outcome
+    # of a login attempt.
+    "axes.middleware.AxesMiddleware",
+]
+
+# Brute-force protection wraps the normal backend; Axes must be first.
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -122,14 +146,43 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ---------------------------------------------------------------------------
-# Password validation
+# Passwords
 # ---------------------------------------------------------------------------
+# Argon2id first (OWASP's recommended password hash). The remaining hashers stay
+# listed so existing PBKDF2 passwords keep working and are re-hashed to Argon2
+# on the owner's next successful login.
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        # ASVS 2.1.1 asks for at least 12 characters.
+        "OPTIONS": {"min_length": 12},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# ---------------------------------------------------------------------------
+# Brute-force protection (django-axes)
+# ---------------------------------------------------------------------------
+# The admin login is the only authentication surface on this site.
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(hours=1)
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]
+AXES_ENABLE_ACCESS_FAILURE_LOG = True
+AXES_VERBOSE = True
+# Behind a reverse proxy the real client IP arrives in X-Forwarded-For; without
+# this every visitor looks like the proxy and one attacker locks out everyone.
+AXES_IPWARE_PROXY_COUNT = int(os.getenv("DJANGO_PROXY_COUNT", "0")) or None
+AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 # ---------------------------------------------------------------------------
 # Internationalization — Greek
@@ -147,6 +200,19 @@ LANGUAGES = [("el", _("Ελληνικά"))]
 STATIC_URL = "static/"
 STATICFILES_DIRS = [FRONTEND_DIR / "static"]
 STATIC_ROOT = FRONTEND_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        # Hashed filenames in production: long-lived caching without ever
+        # serving a stale file, and a changed asset gets a new URL.
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+        )
+    },
+}
 
 # Public media (images used in announcements, hero, etc.) served normally.
 MEDIA_URL = "media/"
@@ -178,6 +244,11 @@ ALLOWED_UPLOAD_TYPES = {
     "png": {"image/png"},
 }
 
+# Formats with no dependable magic bytes. Only these may be stored when the
+# sniffer cannot identify the content; everything else must be recognisable,
+# so a text/HTML payload renamed to .pdf is refused.
+UNSNIFFABLE_UPLOAD_TYPES = {"doc"}
+
 # The MIME type stored on the model and sent back by the download view. Derived
 # from the extension *after* it has been checked against the file's magic bytes,
 # so it never depends on the Content-Type the browser claimed at upload time.
@@ -193,19 +264,157 @@ CANONICAL_UPLOAD_MIME = {
 # Reject upload streams larger than this before they hit disk.
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # spill to temp file above 5 MB
+# Caps a request-body DoS built from thousands of tiny form fields.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 200
+DATA_UPLOAD_MAX_NUMBER_FILES = 20
+# Files land on disk readable by the owner only, not by every local account.
+FILE_UPLOAD_PERMISSIONS = 0o640
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o750
 
 # ---------------------------------------------------------------------------
-# Security hardening (active when DEBUG is off)
+# Sessions & cookies
 # ---------------------------------------------------------------------------
+# JavaScript never needs these cookies, so keep them out of its reach: an XSS
+# bug then cannot read a session or the CSRF token.
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # the CSRF token is read from the form, not JS
+SESSION_COOKIE_SAMESITE = "Lax"  # survives normal navigation, blocks cross-site POSTs
+CSRF_COOKIE_SAMESITE = "Strict"
+# Names without the "session"/"csrf" giveaway make automated scanning marginally
+# harder and avoid clashing with anything else on the same domain.
+SESSION_COOKIE_NAME = "nk_sessionid"
+CSRF_COOKIE_NAME = "nk_csrftoken"
+
+SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 hours
+SESSION_SAVE_EVERY_REQUEST = True  # idle timeout rather than absolute
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# ---------------------------------------------------------------------------
+# HTTP security headers
+# ---------------------------------------------------------------------------
+# These cost nothing in development and keep dev/production behaviour aligned.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
+
+# Content Security Policy (django-csp). Everything the site needs is served
+# from its own origin — fonts and htmx are vendored under Frontend/static —
+# so no external origin is allowed to run or load anything.
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'"],
+        "img-src": ["'self'", "data:"],
+        "font-src": ["'self'"],
+        "connect-src": ["'self'"],
+        "form-action": ["'self'"],
+        "base-uri": ["'none'"],
+        "object-src": ["'none'"],
+        "frame-ancestors": ["'none'"],
+        "frame-src": ["'none'"],
+        "manifest-src": ["'self'"],
+        "upgrade-insecure-requests": True,
+    }
+}
+
+# The admin (django-unfold, Alpine.js) ships inline styles and scripts, so the
+# strict policy above would break it. It gets a looser one — still same-origin
+# only, so an injected <script src="https://evil/"> is refused there too.
+# Applied by content.middleware.AdminAwareCSPMiddleware.
+ADMIN_CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "blob:"],
+        "font-src": ["'self'", "data:"],
+        "connect-src": ["'self'"],
+        "form-action": ["'self'"],
+        "base-uri": ["'none'"],
+        "object-src": ["'none'"],
+        "frame-ancestors": ["'none'"],
+    }
+}
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_SECONDS = 31536000  # one year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+    # Only trust this header when a reverse proxy you control sets it.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# ---------------------------------------------------------------------------
+# Caching (used by the contact form's rate limit)
+# ---------------------------------------------------------------------------
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "nk-default",
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Logging — security events go to a file that survives a restart
+# ---------------------------------------------------------------------------
+LOG_DIR = Path(os.getenv("DJANGO_LOG_DIR", PROJECT_ROOT / "Database" / "logs"))
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "security_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "security.log",
+            "maxBytes": 5 * 1024 * 1024,
+            "backupCount": 5,
+            "encoding": "utf-8",
+            "formatter": "verbose",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        # Suspicious operations, host header attacks, CSRF failures.
+        "django.security": {
+            "handlers": ["console", "security_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        # 4xx/5xx raised while handling a request.
+        "django.request": {
+            "handlers": ["console", "security_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        # Login attempts, lockouts.
+        "axes": {
+            "handlers": ["console", "security_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        # This project's own security events (uploads, rate limits, downloads).
+        "content.security": {
+            "handlers": ["console", "security_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
 
 # ---------------------------------------------------------------------------
 # django-unfold admin configuration (Greek)

@@ -1,0 +1,6 @@
+{% extends "error.html" %}
+{% block content %}
+{% with error_code="403" error_title="Δεν επιτρέπεται" error_message="Δεν έχεις δικαίωμα πρόσβασης σε αυτή τη σελίδα." %}
+  {{ block.super }}
+{% endwith %}
+{% endblock %}

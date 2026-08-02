@@ -1,0 +1,6 @@
+{% extends "error.html" %}
+{% block content %}
+{% with error_code="400" error_title="Λανθασμένο αίτημα" error_message="Το αίτημα δεν ήταν έγκυρο. Δοκίμασε ξανά από την αρχική σελίδα." %}
+  {{ block.super }}
+{% endwith %}
+{% endblock %}

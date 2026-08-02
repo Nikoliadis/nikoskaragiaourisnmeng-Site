@@ -16,8 +16,8 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from .management.commands.setup_menu import MENU
-from .models import Announcement, Category, Document, Section
-from .validators import detect_content_type, validate_upload
+from .models import Announcement, Category, ContactMessage, Document, Section
+from .validators import detect_content_type, validate_filename, validate_upload
 
 # Minimal payloads whose magic bytes are what `filetype` sniffs.
 PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
@@ -242,6 +242,174 @@ class PageTests(TestCase):
 
     def test_unknown_section_is_404(self):
         self.assertEqual(self.client.get("/kati-allo/").status_code, 404)
+
+
+class SecurityHeaderTests(TestCase):
+    def test_public_page_carries_a_strict_csp(self):
+        csp = self.client.get(reverse("content:home"))["Content-Security-Policy"]
+
+        self.assertIn("default-src 'self'", csp)
+        self.assertIn("frame-ancestors 'none'", csp)
+        self.assertIn("object-src 'none'", csp)
+        self.assertIn("base-uri 'none'", csp)
+        # No inline scripts and no external origin may execute anything.
+        self.assertIn("script-src 'self'", csp)
+        self.assertNotIn("unsafe-inline", csp.split("style-src")[0])
+        self.assertNotIn("http://", csp.replace("upgrade-insecure-requests", ""))
+
+    def test_admin_gets_its_own_policy_but_still_same_origin(self):
+        csp = self.client.get("/admin/login/", follow=True)["Content-Security-Policy"]
+
+        self.assertIn("'unsafe-inline'", csp)  # unfold needs it
+        self.assertIn("default-src 'self'", csp)
+        self.assertIn("frame-ancestors 'none'", csp)
+
+    def test_other_security_headers(self):
+        response = self.client.get(reverse("content:home"))
+
+        self.assertEqual(response["X-Frame-Options"], "DENY")
+        self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response["Referrer-Policy"], "strict-origin-when-cross-origin")
+        self.assertEqual(response["Cross-Origin-Opener-Policy"], "same-origin")
+        self.assertEqual(response["Cross-Origin-Resource-Policy"], "same-origin")
+        self.assertIn("camera=()", response["Permissions-Policy"])
+        self.assertIn("geolocation=()", response["Permissions-Policy"])
+
+    def test_no_page_loads_anything_from_a_third_party_origin(self):
+        html = self.client.get(reverse("content:home")).content.decode()
+
+        for host in ("googleapis.com", "gstatic.com", "unpkg.com", "cdn."):
+            with self.subTest(host=host):
+                self.assertNotIn(host, html)
+
+    def test_session_cookie_is_not_reachable_from_javascript(self):
+        from django.conf import settings
+
+        self.assertTrue(settings.SESSION_COOKIE_HTTPONLY)
+        self.assertEqual(settings.SESSION_COOKIE_SAMESITE, "Lax")
+        self.assertEqual(settings.CSRF_COOKIE_SAMESITE, "Strict")
+
+    def test_argon2_is_the_default_password_hasher(self):
+        from django.contrib.auth.hashers import make_password
+
+        self.assertTrue(make_password("a-long-enough-passphrase").startswith("argon2"))
+
+
+class SanitisingTests(TestCase):
+    def test_script_in_announcement_body_is_stripped_on_save(self):
+        announcement = Announcement.objects.create(
+            title="Κακόβουλη",
+            content='<p>Γεια</p><script>alert(document.cookie)</script>',
+        )
+        announcement.refresh_from_db()
+
+        self.assertNotIn("<script", announcement.content)
+        self.assertIn("<p>Γεια</p>", announcement.content)
+
+    def test_event_handlers_and_javascript_urls_are_stripped(self):
+        announcement = Announcement.objects.create(
+            title="Κλικ",
+            content='<a href="javascript:alert(1)" onclick="alert(2)">κλικ</a>'
+            '<img src="x" onerror="alert(3)">',
+        )
+
+        self.assertNotIn("javascript:", announcement.content)
+        self.assertNotIn("onclick", announcement.content)
+        self.assertNotIn("onerror", announcement.content)
+
+    def test_ordinary_formatting_survives(self):
+        announcement = Announcement.objects.create(
+            title="Κανονική",
+            content="<p><strong>Έντονα</strong> και <em>πλάγια</em></p><ul><li>ένα</li></ul>",
+        )
+
+        self.assertIn("<strong>Έντονα</strong>", announcement.content)
+        self.assertIn("<li>ένα</li>", announcement.content)
+
+    def test_rendered_page_contains_no_script_tag(self):
+        announcement = Announcement.objects.create(
+            title="Σελίδα", content='<p>ok</p><script>alert(1)</script>'
+        )
+        response = self.client.get(announcement.get_absolute_url())
+
+        self.assertNotContains(response, "<script>alert")
+
+
+class UploadHardeningTests(TestCase):
+    def test_html_renamed_to_pdf_is_rejected(self):
+        """Regression: unsniffable content used to pass the MIME check."""
+        payload = b"<html><script>alert(1)</script></html>"
+        with self.assertRaises(ValidationError):
+            validate_upload(upload("notes.pdf", payload))
+
+    def test_doc_without_magic_bytes_is_still_allowed(self):
+        validate_upload(upload("palio.doc", b"some legacy word bytes" * 5))
+
+    def test_directory_parts_never_survive_an_upload(self):
+        """Django strips them first; assert it, so a regression is visible."""
+        for name in ("../../etc/passwd.pdf", "a/b.pdf", "a\\b.pdf"):
+            with self.subTest(name=name):
+                uploaded = upload(name, PDF_BYTES)
+                self.assertNotIn("/", uploaded.name)
+                self.assertNotIn("\\", uploaded.name)
+                validate_upload(uploaded)  # the sanitised name is fine
+
+    def test_filename_that_could_forge_a_response_header_is_rejected(self):
+        # This name is echoed back in Content-Disposition on download.
+        for name in ('a"; filename="evil.pdf', "line\r\nInjected: 1.pdf", "a\x00b.pdf"):
+            with self.subTest(name=name), self.assertRaises(ValidationError):
+                validate_filename(upload(name, PDF_BYTES))
+
+    def test_stored_path_stays_inside_the_protected_root(self):
+        with override_settings(PROTECTED_MEDIA_ROOT=_TMP_MEDIA):
+            category = Category.objects.create(name="Β", section=Section.EBOOKS)
+            doc = Document.objects.create(
+                title="Δ", category=category, file=upload("../../escape.png", PNG_BYTES)
+            )
+            stored = Path(doc.file.path).resolve()
+
+            self.assertTrue(stored.is_relative_to(Path(_TMP_MEDIA).resolve()))
+
+    def test_download_response_cannot_be_rendered_in_the_browser(self):
+        settings_override = override_settings(PROTECTED_MEDIA_ROOT=_TMP_MEDIA)
+        settings_override.enable()
+        try:
+            category = Category.objects.create(name="Α", section=Section.EBOOKS)
+            doc = Document.objects.create(
+                title="Δ", category=category, file=upload("a.png", PNG_BYTES)
+            )
+            response = self.client.get(doc.get_download_url())
+
+            self.assertIn("attachment", response["Content-Disposition"])
+            self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+            self.assertIn("sandbox", response["Content-Security-Policy"])
+        finally:
+            settings_override.disable()
+
+
+class ContactRateLimitTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+
+        cache.clear()
+
+    def test_flood_is_throttled(self):
+        payload = {"name": "Α", "email": "a@b.gr", "message": "γεια"}
+        accepted = 0
+        for _unused in range(8):
+            response = self.client.post(reverse("content:contact"), payload)
+            if response.status_code == 302 and ContactMessage.objects.count() > accepted:
+                accepted += 1
+
+        self.assertEqual(accepted, 5)
+        self.assertEqual(ContactMessage.objects.count(), 5)
+
+    def test_honeypot_field_blocks_the_message(self):
+        self.client.post(
+            reverse("content:contact"),
+            {"name": "Bot", "email": "b@b.gr", "message": "spam", "website": "http://x"},
+        )
+        self.assertEqual(ContactMessage.objects.count(), 0)
 
 
 class MenuTests(TestCase):

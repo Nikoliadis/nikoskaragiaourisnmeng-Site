@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from django.contrib import messages
@@ -5,9 +6,24 @@ from django.db.models import Count, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
+from django_ratelimit.decorators import ratelimit
 
 from .forms import ContactForm
 from .models import Announcement, Category, Document, Section
+
+security_log = logging.getLogger("content.security")
+
+
+def _client_ip(request) -> str:
+    """Best-effort client IP for the security log.
+
+    X-Forwarded-For is attacker-controlled unless a proxy you own rewrites it,
+    so the value is only ever logged, never used for an access decision.
+    """
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()[:45]
+    return request.META.get("REMOTE_ADDR", "?")
 
 
 # Icon shown on the home page card for each section. Sections without an entry
@@ -93,8 +109,25 @@ def announcement_detail(request, slug):
     return render(request, "content/announcement_detail.html", {"announcement": item})
 
 
+@ratelimit(key="ip", rate="5/h", method="POST", block=False)
 def contact(request):
     if request.method == "POST":
+        if getattr(request, "limited", False):
+            # Silent throttle: the honeypot stops naive bots, this stops the
+            # ones that fill the form correctly and hammer it.
+            security_log.warning(
+                "Contact form rate limit hit from %s", _client_ip(request)
+            )
+            message = _(
+                "Έχεις στείλει πολλά μηνύματα. Δοκίμασε ξανά σε λίγη ώρα."
+            )
+            if request.htmx:
+                return render(
+                    request, "content/partials/contact_success.html", {"message": message}
+                )
+            messages.error(request, message)
+            return redirect("content:contact")
+
         form = ContactForm(request.POST)
         if form.is_valid():
             form.save()
@@ -123,10 +156,18 @@ def download(request, pk):
     try:
         file_handle = document.file.open("rb")
     except FileNotFoundError:
+        # A row pointing at a file that is gone is worth knowing about.
+        security_log.warning(
+            "Document %s references a missing file %s", document.pk, document.file.name
+        )
         raise Http404(_("Το αρχείο δεν βρέθηκε."))
 
-    download_name = document.original_filename or Path(document.file.name).name
+    download_name = Path(document.original_filename or document.file.name).name
     response = FileResponse(file_handle, as_attachment=True, filename=download_name)
     if document.content_type:
         response["Content-Type"] = document.content_type
+    # Belt and braces: always a download, never rendered in the visitor's tab,
+    # and never sniffed into something executable.
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Content-Security-Policy"] = "sandbox; default-src 'none'"
     return response
