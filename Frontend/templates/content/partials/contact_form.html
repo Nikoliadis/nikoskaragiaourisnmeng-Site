@@ -5,8 +5,12 @@
       hx-swap="outerHTML"
       class="space-y-4">
   {% csrf_token %}
-  <div style="position:absolute;left:-9999px" aria-hidden="true">
-    <label>Website{{ form.website }}</label>
+  {% comment %}
+    Honeypot: bots fill it in, humans never see it. Hidden with a class rather
+    than an inline style attribute, which the Content-Security-Policy blocks.
+  {% endcomment %}
+  <div class="honeypot" aria-hidden="true">
+    <label>Επικοινωνία{{ form.website }}</label>
   </div>
 
   <div>

@@ -1,3 +1,5 @@
+/* NOTE: url() paths below are relative to the BUILT file (static/css/app.css),
+   not to this file — the Tailwind CLI copies them through unchanged. */
 /* inter — self-hosted copy of https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap */
 /* cyrillic-ext */
 @font-face {

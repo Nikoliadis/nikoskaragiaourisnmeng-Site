@@ -404,6 +404,57 @@ class ContactRateLimitTests(TestCase):
         self.assertEqual(accepted, 5)
         self.assertEqual(ContactMessage.objects.count(), 5)
 
+    def test_a_message_is_emailed_to_the_superuser(self):
+        from django.contrib.auth import get_user_model
+        from django.core import mail
+
+        get_user_model().objects.create_superuser(
+            "karag", "nikoskarag08@example.gr", "a-long-enough-passphrase"
+        )
+        self.client.post(
+            reverse("content:contact"),
+            {"name": "Μαθητής", "email": "mathitis@example.com", "message": "Γεια σας!"},
+        )
+
+        self.assertEqual(len(mail.outbox), 1)
+        sent = mail.outbox[0]
+        self.assertEqual(sent.to, ["nikoskarag08@example.gr"])
+        # Replying answers the student, not the server.
+        self.assertEqual(sent.reply_to, ["mathitis@example.com"])
+        self.assertIn("Μαθητής", sent.subject)
+        self.assertIn("Γεια σας!", sent.body)
+
+    def test_submission_still_succeeds_when_the_mail_server_fails(self):
+        from unittest.mock import patch
+
+        from django.contrib.auth import get_user_model
+
+        get_user_model().objects.create_superuser(
+            "karag", "k@example.gr", "a-long-enough-passphrase"
+        )
+        with patch(
+            "content.notifications.EmailMessage.send", side_effect=OSError("smtp down")
+        ):
+            response = self.client.post(
+                reverse("content:contact"),
+                {"name": "Α", "email": "a@b.gr", "message": "γεια"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ContactMessage.objects.count(), 1)  # not lost
+
+    def test_no_recipient_configured_is_survivable(self):
+        from django.core import mail
+
+        response = self.client.post(
+            reverse("content:contact"),
+            {"name": "Α", "email": "a@b.gr", "message": "γεια"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ContactMessage.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_honeypot_field_blocks_the_message(self):
         self.client.post(
             reverse("content:contact"),

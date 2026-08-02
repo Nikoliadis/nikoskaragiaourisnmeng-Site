@@ -10,6 +10,7 @@ from django_ratelimit.decorators import ratelimit
 
 from .forms import ContactForm
 from .models import Announcement, Category, Document, Section
+from .notifications import send_contact_notification
 
 security_log = logging.getLogger("content.security")
 
@@ -130,7 +131,10 @@ def contact(request):
 
         form = ContactForm(request.POST)
         if form.is_valid():
-            form.save()
+            message = form.save()
+            # Saved first, emailed second: if the mail server is unreachable the
+            # message is still safe in the admin.
+            send_contact_notification(message, request=request)
             success = _("Το μήνυμά σας στάλθηκε! Θα λάβετε απάντηση σύντομα.")
             if request.htmx:
                 return render(

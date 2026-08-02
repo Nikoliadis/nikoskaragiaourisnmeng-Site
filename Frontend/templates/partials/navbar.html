@@ -2,11 +2,16 @@
 {% url 'content:home' as home_url %}
 {% url 'content:contact' as contact_url %}
 <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
-  <div class="mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-4 lg:px-6">
+  {% comment %}
+    The menu only just fits beside the name on a 1366px screen, so the active
+    item is marked by colour alone — a bolder weight is wider and would push
+    the last item onto a second line on exactly the pages you are viewing.
+  {% endcomment %}
+  <div class="mx-auto flex w-full max-w-screen-2xl items-center gap-2 px-3 lg:px-4">
 
     <!-- Brand -->
     <a href="{{ home_url }}" class="flex min-w-0 shrink-0 flex-col justify-center py-3 leading-tight">
-      <span class="truncate text-lg font-bold text-slate-900">Νικόλαος Καραγκιαούρης</span>
+      <span class="truncate text-base font-bold text-slate-900 2xl:text-lg">Νικόλαος Καραγκιαούρης</span>
       <span class="truncate text-[11px] font-medium text-brand-600">Ναυπηγός και Μηχανολόγος Μηχανικός</span>
     </a>
 
@@ -25,7 +30,7 @@
         {% url 'content:section' section=value as section_url %}
         {% if data.items %}
           <li class="relative" data-dropdown>
-            <button class="flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-2 text-xs transition 2xl:px-3 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == section_url %}font-semibold text-brand-700{% else %}text-slate-700{% endif %}">
+            <button class="flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-2 text-xs transition xl:px-2.5 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == section_url %}text-brand-700{% else %}text-slate-700{% endif %}">
               {{ data.label }}
               <span class="material-symbols-outlined text-sm">expand_more</span>
             </button>
@@ -44,13 +49,13 @@
           </li>
         {% else %}
           <li>
-            <a href="{{ section_url }}" class="block whitespace-nowrap rounded-md px-2 py-2 text-xs transition 2xl:px-3 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == section_url %}font-semibold text-brand-700{% else %}text-slate-700{% endif %}">{{ data.label }}</a>
+            <a href="{{ section_url }}" class="block whitespace-nowrap rounded-md px-1.5 py-2 text-xs transition xl:px-2.5 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == section_url %}text-brand-700{% else %}text-slate-700{% endif %}">{{ data.label }}</a>
           </li>
         {% endif %}
       {% endfor %}
 
       <li>
-        <a href="{{ contact_url }}" class="block whitespace-nowrap rounded-md px-2 py-2 text-xs transition 2xl:px-3 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == contact_url %}font-semibold text-brand-700{% else %}text-slate-700{% endif %}">Επικοινωνία</a>
+        <a href="{{ contact_url }}" class="block whitespace-nowrap rounded-md px-1.5 py-2 text-xs transition xl:px-2.5 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == contact_url %}text-brand-700{% else %}text-slate-700{% endif %}">Επικοινωνία</a>
       </li>
     </ul>
 

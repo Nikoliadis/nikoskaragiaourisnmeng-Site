@@ -349,6 +349,36 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ---------------------------------------------------------------------------
+# Email — notifications for messages sent from the contact form
+# ---------------------------------------------------------------------------
+# Without SMTP credentials the mail is printed to the console instead of being
+# sent, so development never needs a mail server and never emails anyone by
+# accident. Set DJANGO_EMAIL_HOST in .env to switch it on.
+EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("DJANGO_EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("DJANGO_EMAIL_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("DJANGO_EMAIL_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("DJANGO_EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = env_bool("DJANGO_EMAIL_USE_SSL", False)
+EMAIL_TIMEOUT = 10  # never let a stuck mail server hang a visitor's request
+EMAIL_SUBJECT_PREFIX = "[Ιστοσελίδα] "
+
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST
+    else "django.core.mail.backends.console.EmailBackend"
+)
+
+# The "From" address. Many providers refuse to send mail whose From is not the
+# authenticated account, so it defaults to the SMTP user.
+DEFAULT_FROM_EMAIL = os.getenv("DJANGO_FROM_EMAIL", EMAIL_HOST_USER or "noreply@localhost")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Who gets told about a new contact message. Left empty, the site emails every
+# active superuser at the address on their account.
+CONTACT_NOTIFY_EMAILS = env_list("DJANGO_CONTACT_NOTIFY_EMAILS")
+
+# ---------------------------------------------------------------------------
 # Caching (used by the contact form's rate limit)
 # ---------------------------------------------------------------------------
 CACHES = {

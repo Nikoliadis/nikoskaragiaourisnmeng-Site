@@ -7,8 +7,8 @@
 @import "./fonts.css";
 
 /* Scan templates and Python files for utility classes. */
-@source "../../templates";
-@source "../../../Backend/content";
+@source "../templates";
+@source "../../Backend/content";
 
 /* ---- Theme (Tailwind v4 CSS-first config) ---- */
 @theme {
@@ -36,6 +36,15 @@
 }
 
 @layer components {
+  /* Honeypot field on the contact form. Off-screen rather than display:none,
+     because some bots skip fields that are outright hidden. */
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
   .container-page {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }

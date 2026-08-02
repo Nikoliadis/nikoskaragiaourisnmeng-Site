@@ -67,7 +67,7 @@ cd /srv/karagiaouris/Backend
 sudo -u karagiaouris ../venv/bin/python manage.py migrate
 sudo -u karagiaouris ../venv/bin/python manage.py collectstatic --noinput
 sudo -u karagiaouris ../venv/bin/tailwindcss \
-     -i ../Frontend/static/src/input.css -o ../Frontend/static/css/app.css --minify
+     -i ../Frontend/src/input.css -o ../Frontend/static/css/app.css --minify
 sudo -u karagiaouris ../venv/bin/python manage.py check --deploy
 ```
 

@@ -19,8 +19,12 @@ Backend/            Ο κώδικας του Django
 
 Frontend/           Ό,τι βλέπει ο browser
   templates/          base.html, navbar, σελίδες
-  static/src/         input.css (πηγή Tailwind)
-  static/css/         app.css (χτισμένο — μην το επεξεργάζεσαι με το χέρι)
+  src/                input.css + fonts.css (πηγές Tailwind — ΔΕΝ σερβίρονται)
+  static/             ό,τι φτάνει στον browser:
+    css/app.css         χτισμένο — μην το επεξεργάζεσαι με το χέρι
+    js/                 htmx + τα script του site (τοπικά, όχι από CDN)
+    fonts/              Inter + Material Symbols (τοπικά, όχι από Google)
+    img/hero/           οι φωτογραφίες του slideshow
   staticfiles/        αποτέλεσμα του collectstatic (παραγωγή)
 
 Database/           Τα δεδομένα — τίποτα εδώ δεν μπαίνει στο git
@@ -75,7 +79,7 @@ python manage.py createsuperuser
 
 **4. Χτίσιμο του CSS** (από τον φάκελο `Backend`)
 ```bat
-tailwindcss -i ..\Frontend\static\src\input.css -o ..\Frontend\static\css\app.css --minify
+tailwindcss -i ..\Frontend\src\input.css -o ..\Frontend\static\css\app.css --minify
 ```
 
 **5. Το μενού της ιστοσελίδας**
@@ -112,7 +116,7 @@ python manage.py runserver
 Σε **δεύτερο** τερματικό, μέσα από τον φάκελο `Backend`, άφησε το Tailwind να
 ξαναχτίζει αυτόματα με κάθε αλλαγή σε template:
 ```bat
-tailwindcss -i ..\Frontend\static\src\input.css -o ..\Frontend\static\css\app.css --watch
+tailwindcss -i ..\Frontend\src\input.css -o ..\Frontend\static\css\app.css --watch
 ```
 Ο `runserver` τρέχει στο πρώτο τερματικό. Ανανέωσε τη σελίδα για να δεις αλλαγές.
 
@@ -176,6 +180,20 @@ admin, χωρίς κώδικα.
 4. **Ανακοινώσεις** → κείμενο με μορφοποίηση (rich text) + προαιρετική εικόνα.
 5. **Μηνύματα επικοινωνίας** → διαβάζει όσα στέλνουν οι μαθητές.
 
+### Ειδοποίηση με email
+
+Κάθε μήνυμα από τη φόρμα επικοινωνίας **αποθηκεύεται στο admin** και παράλληλα
+στέλνεται με email. Παραλήπτης είναι το email του λογαριασμού superuser όπως
+είναι γραμμένο στο admin — αλλάζεις το email εκεί και ακολουθεί, χωρίς κώδικα.
+Το «Απάντηση» στο email πηγαίνει κατευθείαν στον μαθητή.
+
+Χρειάζεται SMTP στο `.env` (δες `.env.example`). **Χωρίς ρύθμιση** το μήνυμα
+τυπώνεται στο τερματικό αντί να σταλεί — έτσι δεν στέλνεται τίποτα κατά λάθος
+από τον υπολογιστή σου. Αν ο mail server πέσει, το μήνυμα **δεν χάνεται**:
+είναι ήδη στη βάση.
+
+> Gmail και Yahoo θέλουν **App Password**, όχι τον κανονικό σου κωδικό.
+
 Οι κατηγορίες εμφανίζονται **αυτόματα** στα dropdown του menu. Δύο κατηγορίες
 μπορούν να έχουν το ίδιο όνομα σε διαφορετικές ενότητες — η δεύτερη παίρνει
 αυτόματα ξεχωριστή διεύθυνση (`…-2`).
@@ -192,8 +210,9 @@ admin, χωρίς κώδικα.
   - **Whitelist επεκτάσεων:** pdf, doc, docx, jpg, jpeg, png
   - **Όριο μεγέθους:** 25 MB (ρυθμίζεται με `MAX_UPLOAD_SIZE`)
   - **MIME sniffing:** τα magic bytes πρέπει να ταιριάζουν με την επέκταση
-    (μπλοκάρει π.χ. `.exe` μετονομασμένο σε `.pdf`). Αρχεία που δεν αναγνωρίζονται
-    καθόλου από τα magic bytes (π.χ. παλιά `.doc`) περνούν τον έλεγχο.
+    (μπλοκάρει π.χ. `.exe` ή HTML μετονομασμένο σε `.pdf`). Αρχείο που δεν
+    αναγνωρίζεται καθόλου απορρίπτεται — μόνη εξαίρεση το παλιό `.doc`, που
+    πράγματι δεν έχει αξιόπιστη υπογραφή.
 - Ο τύπος MIME που αποθηκεύεται και επιστρέφεται στη λήψη προκύπτει από την
   **ελεγμένη επέκταση**, ποτέ από αυτό που δηλώνει ο browser.
 
