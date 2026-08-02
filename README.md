@@ -7,6 +7,30 @@ Django 6 + Tailwind CSS v4 + HTMX + django-unfold admin.
 
 ---
 
+## Δομή project
+
+```
+Backend/            Ο κώδικας του Django
+  manage.py           όλες οι εντολές τρέχουν από εδώ
+  requirements.txt
+  config/             settings, urls, wsgi/asgi
+  content/            models, views, admin, validators, storage, tests
+    migrations/       η δομή της βάσης (κώδικας, όχι δεδομένα)
+
+Frontend/           Ό,τι βλέπει ο browser
+  templates/          base.html, navbar, σελίδες
+  static/src/         input.css (πηγή Tailwind)
+  static/css/         app.css (χτισμένο — μην το επεξεργάζεσαι με το χέρι)
+  staticfiles/        αποτέλεσμα του collectstatic (παραγωγή)
+
+Database/           Τα δεδομένα — τίποτα εδώ δεν μπαίνει στο git
+  db.sqlite3          η βάση
+  protected_media/    τα ανεβασμένα αρχεία (ΕΚΤΟΣ web root)
+  media/              δημόσιες εικόνες ανακοινώσεων
+
+.env                Ρυθμίσεις περιβάλλοντος (ΠΟΤΕ στο git)
+```
+
 ## Τεχνολογίες
 
 | Ρόλος | Εργαλείο |
@@ -17,59 +41,102 @@ Django 6 + Tailwind CSS v4 + HTMX + django-unfold admin.
 | Διαδραστικότητα | HTMX (φόρμα επικοινωνίας χωρίς reload) |
 | Έλεγχος αρχείων | `filetype` (MIME sniffing, καθαρή Python) |
 
-## Δομή project
-
-```
-config/            # settings, urls, wsgi
-content/           # η εφαρμογή: models, views, admin, validators, storage
-  management/…     # εντολή seed_demo
-templates/         # base.html, navbar, σελίδες
-static/src/        # input.css (Tailwind πηγή)
-static/css/        # app.css (χτισμένο — μην το επεξεργάζεσαι με το χέρι)
-protected_media/   # τα ανεβασμένα αρχεία (ΕΚΤΟΣ web root)
-media/             # δημόσιες εικόνες ανακοινώσεων
-```
-
 ---
 
-## Setup βήμα-βήμα
+# Πώς τρέχω το project στον υπολογιστή μου (localhost)
+
+## Πρώτη φορά — εγκατάσταση
+
+Άνοιξε ένα τερματικό **στον φάκελο του project** (`nikoskaragiaourisnmeng-Site`).
 
 **1. Virtual environment & εξαρτήσεις**
-```bash
+```bat
 python -m venv venv
-venv\Scripts\activate            # Windows
-pip install -r requirements.txt
+venv\Scripts\activate
+pip install -r Backend\requirements.txt
 ```
+> Όταν το venv είναι ενεργό, βλέπεις `(venv)` στην αρχή της γραμμής.
 
 **2. Ρυθμίσεις περιβάλλοντος**
-```bash
-copy .env.example .env           # και άλλαξε το DJANGO_SECRET_KEY
+```bat
+copy .env.example .env
+```
+Άνοιξε το `.env` και βάλε ένα δικό σου `DJANGO_SECRET_KEY`. Φτιάξε ένα με:
+```bat
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
 **3. Βάση δεδομένων**
-```bash
+```bat
+cd Backend
 python manage.py migrate
 python manage.py createsuperuser
 ```
 
-**4. Χτίσιμο του CSS** (μία φορά, ή με `--watch` κατά την ανάπτυξη)
-```bash
-tailwindcss -i static/src/input.css -o static/css/app.css --minify
-# κατά την ανάπτυξη:
-tailwindcss -i static/src/input.css -o static/css/app.css --watch
+**4. Χτίσιμο του CSS** (από τον φάκελο `Backend`)
+```bat
+tailwindcss -i ..\Frontend\static\src\input.css -o ..\Frontend\static\css\app.css --minify
 ```
 
 **5. (Προαιρετικό) Δείγμα δεδομένων**
-```bash
+```bat
 python manage.py seed_demo
 ```
 
-**6. Εκκίνηση**
-```bash
+## Κάθε φορά που θέλω να δουλέψω
+
+```bat
+venv\Scripts\activate
+cd Backend
 python manage.py runserver
 ```
-- Ιστοσελίδα: http://127.0.0.1:8000/
-- Admin: http://127.0.0.1:8000/admin/
+
+Και μετά στον browser:
+
+| Τι | Διεύθυνση |
+|---|---|
+| Η ιστοσελίδα | http://127.0.0.1:8000/ |
+| Το admin panel | http://127.0.0.1:8000/admin/ |
+
+Για να σταματήσεις τον server: **Ctrl + C** στο τερματικό.
+
+> **Όλες οι εντολές `manage.py` τρέχουν μέσα από τον φάκελο `Backend`.**
+> Αν δεις `No module named 'config'`, είσαι σε λάθος φάκελο.
+
+## Όταν αλλάζω σχεδίαση (CSS)
+
+Σε **δεύτερο** τερματικό, μέσα από τον φάκελο `Backend`, άφησε το Tailwind να
+ξαναχτίζει αυτόματα με κάθε αλλαγή σε template:
+```bat
+tailwindcss -i ..\Frontend\static\src\input.css -o ..\Frontend\static\css\app.css --watch
+```
+Ο `runserver` τρέχει στο πρώτο τερματικό. Ανανέωσε τη σελίδα για να δεις αλλαγές.
+
+## Όταν αλλάζω models
+
+```bat
+cd Backend
+python manage.py makemigrations
+python manage.py migrate
+```
+
+## Tests
+
+```bat
+cd Backend
+python manage.py test content
+```
+Καλύπτουν τον έλεγχο των uploads, τη λήψη αρχείων και τη δημιουργία slug. Τρέχουν
+σε προσωρινή βάση και προσωρινό φάκελο αρχείων — δεν αγγίζουν το `Database/`.
+
+## Συνηθισμένα προβλήματα
+
+| Μήνυμα | Τι φταίει |
+|---|---|
+| `No module named 'config'` | Δεν είσαι στον φάκελο `Backend`. |
+| `DJANGO_SECRET_KEY is not set` | Λείπει το `.env` ή το κλειδί μέσα του (εμφανίζεται μόνο με `DJANGO_DEBUG=False`). |
+| Η σελίδα φαίνεται χωρίς σχεδίαση | Δεν έχει χτιστεί το CSS — τρέξε την εντολή του Tailwind (βήμα 4). |
+| `That port is already in use` | Τρέχει ήδη server. Κλείσ' τον ή `python manage.py runserver 8001`. |
 
 ---
 
@@ -83,30 +150,37 @@ python manage.py runserver
 4. **Ανακοινώσεις** → κείμενο με μορφοποίηση (rich text) + προαιρετική εικόνα.
 5. **Μηνύματα επικοινωνίας** → διαβάζει όσα στέλνουν οι μαθητές.
 
-Οι κατηγορίες εμφανίζονται **αυτόματα** στα dropdown του menu.
+Οι κατηγορίες εμφανίζονται **αυτόματα** στα dropdown του menu. Δύο κατηγορίες
+μπορούν να έχουν το ίδιο όνομα σε διαφορετικές ενότητες — η δεύτερη παίρνει
+αυτόματα ξεχωριστή διεύθυνση (`…-2`).
 
 ---
 
 ## Ασφάλεια αρχείων
 
-- Τα αρχεία αποθηκεύονται στο `protected_media/` με **τυχαίο όνομα UUID**· το πραγματικό
-  όνομα κρατιέται στη βάση.
+- Τα αρχεία αποθηκεύονται στο `Database/protected_media/` με **τυχαίο όνομα UUID**·
+  το πραγματικό όνομα κρατιέται στη βάση.
 - Δεν υπάρχει δημόσιο URL· η λήψη γίνεται **μόνο** μέσω του `content.views.download`
   (`/lipsi/<id>/`), που σερβίρει το αρχείο με το σωστό όνομα.
-- Κάθε ανέβασμα ελέγχεται (`content/validators.py`):
+- Κάθε ανέβασμα ελέγχεται (`Backend/content/validators.py`):
   - **Whitelist επεκτάσεων:** pdf, doc, docx, jpg, jpeg, png
   - **Όριο μεγέθους:** 25 MB (ρυθμίζεται με `MAX_UPLOAD_SIZE`)
   - **MIME sniffing:** τα magic bytes πρέπει να ταιριάζουν με την επέκταση
-    (μπλοκάρει π.χ. `.exe` μετονομασμένο σε `.pdf`).
+    (μπλοκάρει π.χ. `.exe` μετονομασμένο σε `.pdf`). Αρχεία που δεν αναγνωρίζονται
+    καθόλου από τα magic bytes (π.χ. παλιά `.doc`) περνούν τον έλεγχο.
+- Ο τύπος MIME που αποθηκεύεται και επιστρέφεται στη λήψη προκύπτει από την
+  **ελεγμένη επέκταση**, ποτέ από αυτό που δηλώνει ο browser.
 
 ---
 
 ## Παραγωγή (production) — σημειώσεις
 
-- Βάλε `DJANGO_DEBUG=False` και σωστό `DJANGO_ALLOWED_HOSTS` στο `.env`.
+- Βάλε `DJANGO_DEBUG=False` και σωστό `DJANGO_ALLOWED_HOSTS` στο `.env`. Χωρίς
+  `DJANGO_SECRET_KEY` το project **αρνείται να ξεκινήσει** — αυτό είναι σκόπιμο.
 - Όρισε το `PROTECTED_MEDIA_ROOT` σε φάκελο **εκτός** του document root του web server.
-- `python manage.py collectstatic` και σέρβιρε το `staticfiles/` από τον web server.
+- `python manage.py collectstatic` και σέρβιρε το `Frontend/staticfiles/` από τον web server.
 - Για μεγάλα αρχεία, χρησιμοποίησε `X-Sendfile`/`X-Accel-Redirect` αντί για streaming
   μέσω Django (η τρέχουσα υλοποίηση με `FileResponse` δουλεύει, αλλά περνά από τη Python).
 - Λογαριασμός καθηγητή: φτιάξε του χρήστη **staff** με δικαιώματα μόνο στα models που
   χρειάζεται (ή άφησέ τον superuser αν είναι ο μόνος διαχειριστής).
+- Κράτα backup τον φάκελο `Database/` — δες το `Database/README.md`.

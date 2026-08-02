@@ -52,13 +52,6 @@ class DocumentAdmin(ModelAdmin):
             obj.extension or "—",
         )
 
-    def save_model(self, request, obj, form, change):
-        # Record sniffed MIME + real size at save time from the upload.
-        upload = form.cleaned_data.get("file")
-        if upload and hasattr(upload, "content_type"):
-            obj.content_type = getattr(upload, "content_type", "") or obj.content_type
-        super().save_model(request, obj, form, change)
-
 
 @admin.register(Announcement)
 class AnnouncementAdmin(ModelAdmin):

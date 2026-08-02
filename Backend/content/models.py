@@ -6,7 +6,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from .storage import protected_storage, uuid_upload_to
-from .validators import validate_upload
+from .validators import detect_content_type, validate_upload
 
 
 class Section(models.TextChoices):
@@ -22,6 +22,32 @@ class Section(models.TextChoices):
 def greek_slugify(value: str) -> str:
     """Slug helper that keeps Greek text usable (allows unicode)."""
     return slugify(value, allow_unicode=True)
+
+
+def unique_slug(instance, value: str, field_name: str = "slug") -> str:
+    """A slug for `value` that no other row of the same model is using.
+
+    Two categories may legitimately share a name across sections («Θέματα 2024»
+    under both Πανελλαδικές and ΕΠΑΛ), so collisions get a -2, -3 … suffix
+    instead of an IntegrityError. A name with no slug-able characters at all
+    («???») would produce an empty slug that `reverse()` cannot build a URL
+    from, so it falls back to the model name.
+    """
+    max_length = instance._meta.get_field(field_name).max_length
+    base = greek_slugify(value) or instance._meta.model_name
+    base = base[:max_length]
+
+    others = instance.__class__._default_manager.all()
+    if instance.pk is not None:
+        others = others.exclude(pk=instance.pk)
+
+    slug = base
+    counter = 2
+    while others.filter(**{field_name: slug}).exists():
+        suffix = f"-{counter}"
+        slug = f"{base[:max_length - len(suffix)]}{suffix}"
+        counter += 1
+    return slug
 
 
 class Category(models.Model):
@@ -57,7 +83,7 @@ class Category(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = greek_slugify(self.name)
+            self.slug = unique_slug(self, self.name)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -96,11 +122,16 @@ class Document(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        # Capture the real filename and size from the freshly uploaded file.
-        if self.file and hasattr(self.file, "file"):
-            if not self.original_filename:
-                self.original_filename = Path(self.file.name).name
-            self.size = getattr(self.file, "size", self.size) or self.size
+        # Capture the real filename, size and type from a freshly uploaded file.
+        # `_committed` is False only while an upload is still in memory/temp and
+        # has not been written to storage yet; testing it (instead of reaching
+        # for `self.file.file`) means re-saving a row whose file has vanished
+        # from disk edits the record normally rather than raising
+        # FileNotFoundError.
+        if self.file and not self.file._committed:
+            self.original_filename = Path(self.file.name).name
+            self.size = self.file.size
+            self.content_type = detect_content_type(self.file)
         super().save(*args, **kwargs)
 
     @property
@@ -141,7 +172,7 @@ class Announcement(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = greek_slugify(self.title)
+            self.slug = unique_slug(self, self.title)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

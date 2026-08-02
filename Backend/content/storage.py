@@ -10,15 +10,28 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
+from django.utils.functional import cached_property
 
 
 class ProtectedFileSystemStorage(FileSystemStorage):
     """FileSystemStorage rooted outside the public media directory."""
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("location", str(settings.PROTECTED_MEDIA_ROOT))
         kwargs.setdefault("base_url", None)  # never expose a public URL
         super().__init__(*args, **kwargs)
+
+    @cached_property
+    def base_location(self):
+        # Read the setting on first use rather than at import time, so the
+        # location follows settings changes (an overridden PROTECTED_MEDIA_ROOT
+        # in the tests, for instance).
+        return self._value_or_setting(self._location, str(settings.PROTECTED_MEDIA_ROOT))
+
+    def _clear_cached_properties(self, setting, **kwargs):
+        if setting == "PROTECTED_MEDIA_ROOT":
+            self.__dict__.pop("base_location", None)
+            self.__dict__.pop("location", None)
+        super()._clear_cached_properties(setting, **kwargs)
 
 
 protected_storage = ProtectedFileSystemStorage()

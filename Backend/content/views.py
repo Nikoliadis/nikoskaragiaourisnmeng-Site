@@ -10,6 +10,17 @@ from .forms import ContactForm
 from .models import Announcement, Category, Document, Section
 
 
+# Icon shown on the home page card for each section. Sections without an entry
+# fall back to a generic folder, so adding a Section never leaves a blank card.
+SECTION_ICONS = {
+    Section.PANELLINIES: "school",
+    Section.ASKISEIS: "assignment",
+    Section.EBOOKS: "menu_book",
+    Section.XRISIMA: "engineering",
+    Section.TRITOVATHMIA: "account_balance",
+}
+
+
 def _active_documents(category):
     """All visible documents in a category and its direct subcategories."""
     return (
@@ -21,10 +32,11 @@ def _active_documents(category):
 
 def home(request):
     latest = Announcement.objects.filter(published=True)[:3]
+    # Built from Section itself so the cards always match the navbar, and a new
+    # section shows up on the home page without a second edit here.
     cards = [
-        {"section": Section.PANELLINIES, "icon": "school", "label": _("Πανελλαδικές")},
-        {"section": Section.ASKISEIS, "icon": "assignment", "label": _("Ασκήσεις")},
-        {"section": Section.EBOOKS, "icon": "menu_book", "label": _("e-books")},
+        {"section": value, "icon": SECTION_ICONS.get(value, "folder"), "label": label}
+        for value, label in Section.choices
     ]
     return render(request, "content/home.html", {"announcements": latest, "cards": cards})
 

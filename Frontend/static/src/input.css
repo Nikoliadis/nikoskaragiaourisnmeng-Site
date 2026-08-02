@@ -2,7 +2,7 @@
 
 /* Scan templates and Python files for utility classes. */
 @source "../../templates";
-@source "../../content";
+@source "../../../Backend/content";
 
 /* ---- Theme (Tailwind v4 CSS-first config) ---- */
 @theme {
