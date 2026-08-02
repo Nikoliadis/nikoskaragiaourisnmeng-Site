@@ -21,6 +21,15 @@ SECTION_ICONS = {
 }
 
 
+# Hero banner slideshow. The files are CC0 photographs cropped to 1920x900 —
+# see Frontend/static/img/hero/CREDITS.md.
+HERO_SLIDES = [
+    {"src": "img/hero/ship.jpg", "alt": _("Φορτηγό πλοίο στη θάλασσα")},
+    {"src": "img/hero/wind.jpg", "alt": _("Θαλάσσιο αιολικό πάρκο στο ηλιοβασίλεμα")},
+    {"src": "img/hero/study.jpg", "alt": _("Μαθητής διαβάζει βιβλίο κρατώντας σημειώσεις")},
+]
+
+
 def _active_documents(category):
     """All visible documents in a category and its direct subcategories."""
     return (
@@ -38,7 +47,11 @@ def home(request):
         {"section": value, "icon": SECTION_ICONS.get(value, "folder"), "label": label}
         for value, label in Section.choices
     ]
-    return render(request, "content/home.html", {"announcements": latest, "cards": cards})
+    return render(
+        request,
+        "content/home.html",
+        {"announcements": latest, "cards": cards, "hero_slides": HERO_SLIDES},
+    )
 
 
 def section_view(request, section):

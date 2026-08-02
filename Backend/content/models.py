@@ -16,11 +16,11 @@ class Section(models.TextChoices):
     both built from Section.choices.
     """
 
-    PANELLINIES = "panellinies", _("ΠΑΝΕΛΛΑΔΙΚΕΣ ΕΞΕΤΑΣΕΙΣ")
-    EBOOKS = "ebooks", _("ΒΙΒΛΙΑ ΕΠΑΛ")
-    ASKISEIS = "askiseis", _("ΕΠΑΓΓΕΛΜΑΤΙΚΑ ΛΥΚΕΙΑ")
-    XRISIMA = "xrisima", _("ΣΧΟΛΕΣ ΕΠΑΓΓΕΛΜΑΤΙΚΗΣ ΚΑΤΑΡΤΙΣΗΣ")
-    TRITOVATHMIA = "tritovathmia", _("ΤΡΙΤΟΒΑΘΜΙΑ ΕΚΠΑΙΔΕΥΣΗ")
+    PANELLINIES = "panellinies", _("Πανελλαδικές εξετάσεις")
+    EBOOKS = "ebooks", _("Βιβλία ΕΠΑΛ")
+    ASKISEIS = "askiseis", _("Επαγγελματικά λύκεια")
+    XRISIMA = "xrisima", _("Σχολές επαγγελματικής κατάρτισης")
+    TRITOVATHMIA = "tritovathmia", _("Τριτοβάθμια εκπαίδευση")
 
 
 def greek_slugify(value: str) -> str:

@@ -1,22 +1,41 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block content %}
-<!-- Hero -->
-<section class="relative overflow-hidden bg-slate-900">
+<!-- Hero: the photos cross-fade on their own; see content.views.HERO_SLIDES -->
+<section class="relative overflow-hidden bg-slate-900" data-hero>
   <div class="absolute inset-0">
-    <div class="h-full w-full bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900"></div>
+    {% for slide in hero_slides %}
+      <img src="{% static slide.src %}" alt="{{ slide.alt }}"
+           width="1920" height="900"
+           {% if forloop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
+           data-hero-slide
+           class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-1000 ease-in-out motion-reduce:transition-none {% if forloop.first %}opacity-100{% endif %}">
+    {% endfor %}
+    <!-- Keeps the headline readable whatever the photo underneath is doing. -->
+    <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/75 to-slate-900/40"></div>
   </div>
+
   <div class="container-page relative py-20 sm:py-28">
     <div class="max-w-2xl">
       <p class="mb-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-brand-200">Εκπαιδευτικό υλικό Μηχανολογίας</p>
-      <h1 class="text-4xl font-bold leading-tight text-white sm:text-5xl">Η γνώση είναι η δύναμη</h1>
-      <p class="mt-4 text-lg text-slate-300">Παλιά θέματα, ασκήσεις, εργασίες και e-books για τους μαθητές του τομέα Μηχανολογίας — όλα οργανωμένα και έτοιμα για λήψη.</p>
+      <h1 class="text-4xl font-bold leading-tight text-white drop-shadow sm:text-5xl">Η γνώση είναι η δύναμη</h1>
+      <p class="mt-4 text-lg text-slate-200">Παλιά θέματα, ασκήσεις, εργασίες και e-books για τους μαθητές του τομέα Μηχανολογίας — όλα οργανωμένα και έτοιμα για λήψη.</p>
       <div class="mt-8 flex flex-wrap gap-3">
         <a href="{% url 'content:section' section='panellinies' %}" class="btn-primary">Πανελλαδικές εξετάσεις</a>
         <a href="{% url 'content:section' section='askiseis' %}" class="btn-ghost !bg-white/10 !text-white !border-white/20 hover:!bg-white/20">Επαγγελματικά Λύκεια</a>
       </div>
     </div>
+
+    {% if hero_slides|length > 1 %}
+      <div class="mt-10 flex gap-2" role="tablist" aria-label="Φωτογραφίες">
+        {% for slide in hero_slides %}
+          <button type="button" data-hero-dot
+                  class="h-2 rounded-full transition-all {% if forloop.first %}w-8 bg-white{% else %}w-2 bg-white/40 hover:bg-white/70{% endif %}"
+                  aria-label="Φωτογραφία {{ forloop.counter }}"></button>
+        {% endfor %}
+      </div>
+    {% endif %}
   </div>
 </section>
 
@@ -63,4 +82,58 @@
   </div>
 </section>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Hero slideshow: cross-fade every 6s, pause on hover, dots jump to a photo.
+  (function () {
+    const slides = document.querySelectorAll("[data-hero-slide]");
+    const dots = document.querySelectorAll("[data-hero-dot]");
+    if (slides.length < 2) return;
+
+    const DELAY = 6000;
+    let current = 0;
+    let timer = null;
+
+    function show(next) {
+      slides[current].classList.remove("opacity-100");
+      if (dots[current]) dots[current].className = dots[current].className
+        .replace("w-8 bg-white", "w-2 bg-white/40 hover:bg-white/70");
+
+      current = (next + slides.length) % slides.length;
+
+      slides[current].classList.add("opacity-100");
+      if (dots[current]) dots[current].className = dots[current].className
+        .replace("w-2 bg-white/40 hover:bg-white/70", "w-8 bg-white");
+    }
+
+    function start() {
+      // Someone who asked for less motion gets the first photo and nothing else.
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      stop();
+      timer = setInterval(() => show(current + 1), DELAY);
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+
+    dots.forEach((dot, index) => dot.addEventListener("click", () => {
+      show(index);
+      start();
+    }));
+
+    const hero = document.querySelector("[data-hero]");
+    if (hero) {
+      hero.addEventListener("mouseenter", stop);
+      hero.addEventListener("mouseleave", start);
+    }
+    // Don't animate in a background tab.
+    document.addEventListener("visibilitychange", () => document.hidden ? stop() : start());
+
+    start();
+  })();
+</script>
 {% endblock %}
