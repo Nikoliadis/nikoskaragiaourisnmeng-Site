@@ -10,11 +10,15 @@ from .validators import detect_content_type, validate_upload
 
 
 class Section(models.TextChoices):
-    """Top-level navbar sections a category can belong to."""
+    """Top-level navbar sections a category can belong to.
+
+    Declaration order is menu order: the navbar and the home page cards are
+    both built from Section.choices.
+    """
 
     PANELLINIES = "panellinies", _("ΠΑΝΕΛΛΑΔΙΚΕΣ ΕΞΕΤΑΣΕΙΣ")
-    ASKISEIS = "askiseis", _("ΕΠΑΓΓΕΛΜΑΤΙΚΑ ΛΥΚΕΙΑ")
     EBOOKS = "ebooks", _("ΒΙΒΛΙΑ ΕΠΑΛ")
+    ASKISEIS = "askiseis", _("ΕΠΑΓΓΕΛΜΑΤΙΚΑ ΛΥΚΕΙΑ")
     XRISIMA = "xrisima", _("ΣΧΟΛΕΣ ΕΠΑΓΓΕΛΜΑΤΙΚΗΣ ΚΑΤΑΡΤΙΣΗΣ")
     TRITOVATHMIA = "tritovathmia", _("ΤΡΙΤΟΒΑΘΜΙΑ ΕΚΠΑΙΔΕΥΣΗ")
 

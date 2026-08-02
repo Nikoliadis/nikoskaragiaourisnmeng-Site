@@ -6,13 +6,16 @@ touches the real protected_media/ directory.
 
 import shutil
 import tempfile
+from io import StringIO
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from .management.commands.setup_menu import MENU
 from .models import Announcement, Category, Document, Section
 from .validators import detect_content_type, validate_upload
 
@@ -239,3 +242,64 @@ class PageTests(TestCase):
 
     def test_unknown_section_is_404(self):
         self.assertEqual(self.client.get("/kati-allo/").status_code, 404)
+
+
+class MenuTests(TestCase):
+    """The navbar structure the teacher specified."""
+
+    def setUp(self):
+        call_command("setup_menu", stdout=StringIO())
+
+    def test_sections_are_in_menu_order(self):
+        self.assertEqual(
+            list(Section.values),
+            ["panellinies", "ebooks", "askiseis", "xrisima", "tritovathmia"],
+        )
+
+    def test_command_creates_the_whole_tree(self):
+        expected = sum(1 + len(children) for roots in MENU.values() for _, children in roots)
+        self.assertEqual(Category.objects.count(), expected)
+
+        for section, roots in MENU.items():
+            for order, (name, children) in enumerate(roots):
+                with self.subTest(section=section, name=name):
+                    parent = Category.objects.get(name=name, section=section, parent=None)
+                    self.assertEqual(parent.order, order)
+                    self.assertTrue(parent.is_active)
+                    self.assertEqual(
+                        list(parent.children.order_by("order").values_list("name", flat=True)),
+                        children,
+                    )
+
+    def test_running_twice_changes_nothing(self):
+        before = set(Category.objects.values_list("pk", flat=True))
+        call_command("setup_menu", stdout=StringIO())
+        self.assertEqual(set(Category.objects.values_list("pk", flat=True)), before)
+
+    def test_prune_removes_strays_but_keeps_categories_holding_documents(self):
+        stray = Category.objects.create(name="Παλιά κατηγορία", section=Section.EBOOKS)
+        with_file = Category.objects.create(name="Με αρχείο", section=Section.EBOOKS)
+        Document.objects.create(title="Κρατημένο", category=with_file, file="2020/01/x.pdf")
+
+        call_command("setup_menu", "--prune", stdout=StringIO())
+
+        self.assertFalse(Category.objects.filter(pk=stray.pk).exists())
+        self.assertTrue(Category.objects.filter(pk=with_file.pk).exists())
+
+    def test_navbar_lists_sections_subcategories_and_grandchildren(self):
+        response = self.client.get(reverse("content:home"))
+
+        for section, roots in MENU.items():
+            self.assertContains(response, Section(section).label)
+            for name, children in roots:
+                with self.subTest(name=name):
+                    self.assertContains(response, name)
+                    for child in children:
+                        self.assertContains(response, child)
+
+    def test_every_menu_category_page_opens(self):
+        for category in Category.objects.all():
+            with self.subTest(category=str(category)):
+                self.assertEqual(
+                    self.client.get(category.get_absolute_url()).status_code, 200
+                )
