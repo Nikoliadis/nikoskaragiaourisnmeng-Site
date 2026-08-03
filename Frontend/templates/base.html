@@ -12,13 +12,20 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon_io/favicon-16x16.png' %}">
   <link rel="apple-touch-icon" href="{% static 'favicon_io/apple-touch-icon.png' %}">
   <link rel="manifest" href="{% static 'favicon_io/site.webmanifest' %}">
-  <meta name="theme-color" content="#0284c7">
+  <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)">
 
   {% comment %}
     Fonts are bundled into app.css from Frontend/static/fonts — nothing is
     loaded from a CDN, so no visitor data leaves this server.
   {% endcomment %}
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+
+  {% comment %}
+    Not deferred on purpose: it sets the theme on <html> before the first
+    paint, so a dark-mode visitor never sees a white flash.
+  {% endcomment %}
+  <script src="{% static 'js/theme.js' %}"></script>
 </head>
 <body class="flex min-h-full flex-col font-sans">
   {% include "partials/navbar.html" %}
@@ -27,7 +34,7 @@
     {% if messages %}
       <div class="container-page mt-4 space-y-2">
         {% for message in messages %}
-          <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">{{ message }}</div>
+          <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">{{ message }}</div>
         {% endfor %}
       </div>
     {% endif %}

@@ -43,20 +43,20 @@
 <section class="container-page -mt-10 relative z-10">
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for card in cards %}
-      <a href="{% url 'content:section' section=card.section %}" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg">
-        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition">
+      <a href="{% url 'content:section' section=card.section %}" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
+        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition dark:bg-slate-800 dark:text-brand-400">
           <span class="material-symbols-outlined">{{ card.icon }}</span>
         </div>
-        <h3 class="font-semibold text-slate-900">{{ card.label }}</h3>
-        <p class="mt-1 text-sm text-slate-500">Δες & κατέβασε υλικό</p>
+        <h3 class="font-semibold text-slate-900 dark:text-slate-100">{{ card.label }}</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Δες & κατέβασε υλικό</p>
       </a>
     {% endfor %}
-    <a href="{% url 'content:contact' %}" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg">
-      <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition">
+    <a href="{% url 'content:contact' %}" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
+      <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition dark:bg-slate-800 dark:text-brand-400">
         <span class="material-symbols-outlined">mail</span>
       </div>
-      <h3 class="font-semibold text-slate-900">Επικοινωνία</h3>
-      <p class="mt-1 text-sm text-slate-500">Στείλε μήνυμα ή ερώτηση</p>
+      <h3 class="font-semibold text-slate-900 dark:text-slate-100">Επικοινωνία</h3>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Στείλε μήνυμα ή ερώτηση</p>
     </a>
   </div>
 </section>
@@ -65,17 +65,17 @@
 {% if announcements %}
 <section class="container-page mt-16">
   <div class="mb-6 flex items-end justify-between">
-    <h2 class="text-2xl font-bold text-slate-900">Τελευταίες ανακοινώσεις</h2>
-    <a href="{% url 'content:announcements' %}" class="text-sm font-medium text-brand-600 hover:text-brand-700">Όλες →</a>
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Τελευταίες ανακοινώσεις</h2>
+    <a href="{% url 'content:announcements' %}" class="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-400">Όλες →</a>
   </div>
   <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
     {% for a in announcements %}
-      <a href="{{ a.get_absolute_url }}" class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:shadow-md">
+      <a href="{{ a.get_absolute_url }}" class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:shadow-md dark:bg-slate-900 dark:border-slate-800">
         {% if a.image %}<img src="{{ a.image.url }}" alt="{{ a.title }}" class="h-40 w-full object-cover">{% endif %}
         <div class="flex flex-1 flex-col p-5">
-          <time class="text-xs text-slate-400">{{ a.created_at|date:"d/m/Y" }}</time>
-          <h3 class="mt-1 font-semibold text-slate-900">{{ a.title }}</h3>
-          <p class="mt-2 line-clamp-3 text-sm text-slate-500">{{ a.content|striptags|truncatewords:20 }}</p>
+          <time class="text-xs text-slate-400 dark:text-slate-500">{{ a.created_at|date:"d/m/Y" }}</time>
+          <h3 class="mt-1 font-semibold text-slate-900 dark:text-slate-100">{{ a.title }}</h3>
+          <p class="mt-2 line-clamp-3 text-sm text-slate-500 dark:text-slate-400">{{ a.content|striptags|truncatewords:20 }}</p>
         </div>
       </a>
     {% endfor %}

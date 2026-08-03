@@ -1,18 +1,18 @@
 {% load i18n %}
 {% url 'content:home' as home_url %}
 {% url 'content:contact' as contact_url %}
-<header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+<header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
   {% comment %}
     The menu only just fits beside the name on a 1366px screen, so the active
     item is marked by colour alone — a bolder weight is wider and would push
     the last item onto a second line on exactly the pages you are viewing.
   {% endcomment %}
-  <div class="mx-auto flex w-full max-w-screen-2xl items-center gap-2 px-3 lg:px-4">
+  <div class="mx-auto flex w-full max-w-screen-2xl items-center gap-1.5 px-3 lg:px-4">
 
     <!-- Brand -->
     <a href="{{ home_url }}" class="flex min-w-0 shrink-0 flex-col justify-center py-3 leading-tight">
-      <span class="truncate text-base font-bold text-slate-900 2xl:text-lg">Νικόλαος Καραγκιαούρης</span>
-      <span class="truncate text-[11px] font-medium text-brand-600">Ναυπηγός και Μηχανολόγος Μηχανικός</span>
+      <span class="truncate text-base font-bold text-slate-900 dark:text-white 2xl:text-lg">Νικόλαος Καραγκιαούρης</span>
+      <span class="truncate text-[11px] font-medium text-brand-600 dark:text-brand-400">Ναυπηγός και Μηχανολόγος Μηχανικός</span>
     </a>
 
     <!-- Desktop menu. Wraps to a second line rather than overflowing on a
@@ -20,7 +20,7 @@
     <ul class="ml-auto hidden flex-wrap items-center justify-end gap-y-1 py-1.5 lg:flex">
       <li>
         <a href="{{ home_url }}"
-           class="flex items-center rounded-md px-3 py-2 transition hover:bg-slate-100 hover:text-brand-700 {% if request.path == home_url %}text-brand-700{% else %}text-slate-600{% endif %}"
+           class="flex items-center rounded-md px-2 py-2 transition hover:bg-slate-100 hover:text-brand-700 dark:hover:bg-slate-800 dark:hover:text-brand-400 {% if request.path == home_url %}text-brand-700 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400{% endif %}"
            aria-label="Αρχική σελίδα" title="Αρχική σελίδα">
           <span class="material-symbols-outlined text-xl">home</span>
         </a>
@@ -30,18 +30,18 @@
         {% url 'content:section' section=value as section_url %}
         {% if data.items %}
           <li class="relative" data-dropdown>
-            <button class="flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-2 text-xs transition xl:px-2.5 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == section_url %}text-brand-700{% else %}text-slate-700{% endif %}">
+            <button class="flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-2 text-[11px] transition hover:bg-slate-100 hover:text-brand-700 dark:hover:bg-slate-800 dark:hover:text-brand-400 xl:px-2.5 xl:text-xs 2xl:text-sm {% if request.path == section_url %}text-brand-700 dark:text-brand-400{% else %}text-slate-700 dark:text-slate-300{% endif %}">
               {{ data.label }}
               <span class="material-symbols-outlined text-sm">expand_more</span>
             </button>
-            <div data-dropdown-menu class="absolute left-0 z-50 mt-1 hidden w-72 rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
-              <a href="{{ section_url }}" class="block rounded-md px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">Όλα «{{ data.label }}»</a>
-              <div class="my-1 border-t border-slate-100"></div>
+            <div data-dropdown-menu class="absolute left-0 z-50 mt-1 hidden w-72 rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+              <a href="{{ section_url }}" class="block rounded-md px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-slate-700">Όλα «{{ data.label }}»</a>
+              <div class="my-1 border-t border-slate-100 dark:border-slate-700"></div>
               {% for cat in data.items %}
-                <a href="{{ cat.get_absolute_url }}" class="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">{{ cat.name }}</a>
+                <a href="{{ cat.get_absolute_url }}" class="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700">{{ cat.name }}</a>
                 {% for child in cat.children.all %}
-                  <a href="{{ child.get_absolute_url }}" class="flex items-start gap-1.5 rounded-md py-1.5 pl-6 pr-3 text-sm text-slate-500 hover:bg-slate-100 hover:text-brand-700">
-                    <span class="text-slate-300">›</span>{{ child.name }}
+                  <a href="{{ child.get_absolute_url }}" class="flex items-start gap-1.5 rounded-md py-1.5 pl-6 pr-3 text-sm text-slate-500 hover:bg-slate-100 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-brand-400">
+                    <span class="text-slate-300 dark:text-slate-600">›</span>{{ child.name }}
                   </a>
                 {% endfor %}
               {% endfor %}
@@ -49,38 +49,43 @@
           </li>
         {% else %}
           <li>
-            <a href="{{ section_url }}" class="block whitespace-nowrap rounded-md px-1.5 py-2 text-xs transition xl:px-2.5 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == section_url %}text-brand-700{% else %}text-slate-700{% endif %}">{{ data.label }}</a>
+            <a href="{{ section_url }}" class="block whitespace-nowrap rounded-md px-1.5 py-2 text-[11px] transition hover:bg-slate-100 hover:text-brand-700 dark:hover:bg-slate-800 dark:hover:text-brand-400 xl:px-2.5 xl:text-xs 2xl:text-sm {% if request.path == section_url %}text-brand-700 dark:text-brand-400{% else %}text-slate-700 dark:text-slate-300{% endif %}">{{ data.label }}</a>
           </li>
         {% endif %}
       {% endfor %}
 
       <li>
-        <a href="{{ contact_url }}" class="block whitespace-nowrap rounded-md px-1.5 py-2 text-xs transition xl:px-2.5 2xl:text-sm hover:bg-slate-100 hover:text-brand-700 {% if request.path == contact_url %}text-brand-700{% else %}text-slate-700{% endif %}">Επικοινωνία</a>
+        <a href="{{ contact_url }}" class="block whitespace-nowrap rounded-md px-1.5 py-2 text-[11px] transition hover:bg-slate-100 hover:text-brand-700 dark:hover:bg-slate-800 dark:hover:text-brand-400 xl:px-2.5 xl:text-xs 2xl:text-sm {% if request.path == contact_url %}text-brand-700 dark:text-brand-400{% else %}text-slate-700 dark:text-slate-300{% endif %}">Επικοινωνία</a>
       </li>
+
+      <li>{% include "partials/theme_toggle.html" %}</li>
     </ul>
 
-    <!-- Mobile toggle -->
-    <button data-toggle="mobile-menu" class="ml-auto inline-flex items-center rounded-md p-2 text-slate-700 hover:bg-slate-100 lg:hidden" aria-label="Μενού">
-      <span class="material-symbols-outlined">menu</span>
-    </button>
+    <!-- Mobile: theme toggle + menu button -->
+    <div class="ml-auto flex items-center gap-1 lg:hidden">
+      {% include "partials/theme_toggle.html" %}
+      <button data-toggle="mobile-menu" class="inline-flex items-center rounded-md p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Μενού">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
   </div>
 
   <!-- Mobile menu: inside the pinned bar, so it drops down wherever the page is -->
-  <div id="mobile-menu" class="hidden max-h-[75vh] overflow-y-auto border-t border-slate-200 bg-white lg:hidden">
+  <div id="mobile-menu" class="hidden max-h-[75vh] overflow-y-auto border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:hidden">
     <div class="mx-auto w-full max-w-screen-2xl space-y-1 px-4 py-3 lg:px-6">
-      <a href="{{ home_url }}" class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+      <a href="{{ home_url }}" class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
         <span class="material-symbols-outlined text-xl">home</span>Αρχική
       </a>
       {% for value, data in nav_menu.items %}
-        <a href="{% url 'content:section' section=value %}" class="block rounded-md px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100">{{ data.label }}</a>
+        <a href="{% url 'content:section' section=value %}" class="block rounded-md px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800">{{ data.label }}</a>
         {% for cat in data.items %}
-          <a href="{{ cat.get_absolute_url }}" class="block rounded-md py-1.5 pl-7 pr-3 text-sm text-slate-600 hover:bg-slate-100">— {{ cat.name }}</a>
+          <a href="{{ cat.get_absolute_url }}" class="block rounded-md py-1.5 pl-7 pr-3 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">— {{ cat.name }}</a>
           {% for child in cat.children.all %}
-            <a href="{{ child.get_absolute_url }}" class="block rounded-md py-1.5 pl-12 pr-3 text-sm text-slate-500 hover:bg-slate-100">› {{ child.name }}</a>
+            <a href="{{ child.get_absolute_url }}" class="block rounded-md py-1.5 pl-12 pr-3 text-sm text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">› {{ child.name }}</a>
           {% endfor %}
         {% endfor %}
       {% endfor %}
-      <a href="{{ contact_url }}" class="block rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Επικοινωνία</a>
+      <a href="{{ contact_url }}" class="block rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">Επικοινωνία</a>
     </div>
   </div>
 </header>

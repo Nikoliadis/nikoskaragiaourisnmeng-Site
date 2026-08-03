@@ -295,6 +295,41 @@ class SecurityHeaderTests(TestCase):
         self.assertTrue(make_password("a-long-enough-passphrase").startswith("argon2"))
 
 
+class ThemeTests(TestCase):
+    """Light/dark switching. The theme itself is CSS, so these guard the wiring."""
+
+    def test_theme_script_loads_before_the_page_is_painted(self):
+        html = self.client.get(reverse("content:home")).content.decode()
+        head = html.split("</head>")[0]
+
+        self.assertIn("js/theme.js", head)
+        # Deferring it would let the page paint in the wrong theme first.
+        script = head[head.index("js/theme.js") - 60 : head.index("js/theme.js") + 40]
+        self.assertNotIn("defer", script)
+
+    def test_every_page_offers_the_toggle(self):
+        for url in (
+            reverse("content:home"),
+            reverse("content:contact"),
+            reverse("content:announcements"),
+            reverse("content:section", args=[Section.EBOOKS]),
+        ):
+            with self.subTest(url=url):
+                self.assertContains(self.client.get(url), "data-theme-toggle")
+
+    def test_toggle_carries_both_icons_for_css_to_choose_from(self):
+        html = self.client.get(reverse("content:home")).content.decode()
+
+        self.assertIn("dark_mode", html)
+        self.assertIn("light_mode", html)
+
+    def test_theme_colour_meta_is_declared_for_both_schemes(self):
+        html = self.client.get(reverse("content:home")).content.decode()
+
+        self.assertIn('media="(prefers-color-scheme: light)"', html)
+        self.assertIn('media="(prefers-color-scheme: dark)"', html)
+
+
 class SanitisingTests(TestCase):
     def test_script_in_announcement_body_is_stripped_on_save(self):
         announcement = Announcement.objects.create(

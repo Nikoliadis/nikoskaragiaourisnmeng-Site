@@ -14,17 +14,17 @@
   </div>
 
   <div>
-    <label for="{{ form.name.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700">Όνομα</label>
+    <label for="{{ form.name.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Όνομα</label>
     {{ form.name }}
     {% for e in form.name.errors %}<p class="mt-1 text-sm text-red-600">{{ e }}</p>{% endfor %}
   </div>
   <div>
-    <label for="{{ form.email.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+    <label for="{{ form.email.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
     {{ form.email }}
     {% for e in form.email.errors %}<p class="mt-1 text-sm text-red-600">{{ e }}</p>{% endfor %}
   </div>
   <div>
-    <label for="{{ form.message.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700">Μήνυμα</label>
+    <label for="{{ form.message.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Μήνυμα</label>
     {{ form.message }}
     {% for e in form.message.errors %}<p class="mt-1 text-sm text-red-600">{{ e }}</p>{% endfor %}
   </div>

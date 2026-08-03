@@ -4,34 +4,34 @@
 {% block title %}Επικοινωνία — Νικόλαος Καραγκιαούρης{% endblock %}
 
 {% block content %}
-<div class="border-b border-slate-200 bg-white">
+<div class="border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800">
   <div class="container-page py-10">
-    <h1 class="text-3xl font-bold text-slate-900">Επικοινωνία</h1>
-    <p class="mt-1 text-slate-500">Έχεις μια ερώτηση ή σχόλιο; Στείλε μου μήνυμα.</p>
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Επικοινωνία</h1>
+    <p class="mt-1 text-slate-500 dark:text-slate-400">Έχεις μια ερώτηση ή σχόλιο; Στείλε μου μήνυμα.</p>
   </div>
 </div>
 
 <div class="container-page grid grid-cols-1 gap-10 py-12 lg:grid-cols-2">
   <div class="space-y-6">
     <div class="flex items-start gap-4">
-      <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-600"><span class="material-symbols-outlined">person</span></div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400"><span class="material-symbols-outlined">person</span></div>
       <div>
-        <h3 class="font-semibold text-slate-900">Νικόλαος Καραγκιαούρης</h3>  
+        <h3 class="font-semibold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</h3>  
       </div>
     </div>
     <div class="flex items-start gap-4">
-      <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-600"><span class="material-symbols-outlined">schedule</span></div>
+      <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400"><span class="material-symbols-outlined">schedule</span></div>
       <div>
-        <h3 class="font-semibold text-slate-900">Χρόνος απάντησης</h3>
-        <p class="text-sm text-slate-500">Συνήθως εντός 1-2 εργάσιμων ημερών.</p>
+        <h3 class="font-semibold text-slate-900 dark:text-slate-100">Χρόνος απάντησης</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Συνήθως εντός 1-2 εργάσιμων ημερών.</p>
       </div>
     </div>
-    <div class="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-500">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
       Τα μηνύματα αποστέλλονται με ασφάλεια και δεν κοινοποιούνται σε τρίτους.
     </div>
   </div>
 
-  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:bg-slate-900 dark:border-slate-800">
     {% include "content/partials/contact_form.html" %}
   </div>
 </div>

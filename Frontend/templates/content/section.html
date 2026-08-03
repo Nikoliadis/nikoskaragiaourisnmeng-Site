@@ -4,10 +4,10 @@
 {% block title %}{{ section_label }} — Νικόλαος Καραγκιαούρης{% endblock %}
 
 {% block content %}
-<div class="border-b border-slate-200 bg-white">
+<div class="border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800">
   <div class="container-page py-10">
-    <nav class="mb-2 text-sm text-slate-400"><a href="{% url 'content:home' %}" class="hover:text-brand-600">Αρχική</a> / <span class="text-slate-600">{{ section_label }}</span></nav>
-    <h1 class="text-3xl font-bold text-slate-900">{{ section_label }}</h1>
+    <nav class="mb-2 text-sm text-slate-400 dark:text-slate-500"><a href="{% url 'content:home' %}" class="hover:text-brand-600">Αρχική</a> / <span class="text-slate-600 dark:text-slate-400">{{ section_label }}</span></nav>
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ section_label }}</h1>
   </div>
 </div>
 
@@ -15,28 +15,28 @@
   {% if roots %}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {% for cat in roots %}
-        <a href="{{ cat.get_absolute_url }}" class="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-md">
+        <a href="{{ cat.get_absolute_url }}" class="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-md dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
           <div>
-            <h2 class="font-semibold text-slate-900 group-hover:text-brand-700">{{ cat.name }}</h2>
-            <p class="mt-0.5 text-sm text-slate-500">
+            <h2 class="font-semibold text-slate-900 group-hover:text-brand-700 dark:text-slate-100">{{ cat.name }}</h2>
+            <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
               {{ cat.doc_count }} αρχεί{{ cat.doc_count|pluralize:"ο,α" }}
               {% if cat.children.count %}· {{ cat.children.count }} υποκατηγορ{{ cat.children.count|pluralize:"ία,ίες" }}{% endif %}
             </p>
           </div>
-          <span class="material-symbols-outlined text-slate-300 group-hover:text-brand-500">arrow_forward</span>
+          <span class="material-symbols-outlined text-slate-300 group-hover:text-brand-500 dark:text-slate-600">arrow_forward</span>
         </a>
       {% endfor %}
     </div>
   {% endif %}
 
   {% if documents %}
-    <h2 class="mb-4 mt-10 text-lg font-semibold text-slate-900">Όλο το υλικό</h2>
+    <h2 class="mb-4 mt-10 text-lg font-semibold text-slate-900 dark:text-slate-100">Όλο το υλικό</h2>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {% for doc in documents %}{% include "content/partials/document_card.html" %}{% endfor %}
     </div>
   {% elif not roots %}
-    <div class="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500">
-      <span class="material-symbols-outlined mb-2 text-4xl text-slate-300">folder_open</span>
+    <div class="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400">
+      <span class="material-symbols-outlined mb-2 text-4xl text-slate-300 dark:text-slate-600">folder_open</span>
       <p>Δεν υπάρχει ακόμη υλικό σε αυτή την ενότητα.</p>
     </div>
   {% endif %}

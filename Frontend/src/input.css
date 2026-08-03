@@ -4,11 +4,21 @@
    Fonts stylesheets; nothing is fetched from fonts.googleapis.com at runtime,
    which keeps visitors' IP addresses off Google's servers and lets the CSP
    forbid every external origin. */
-@import "./fonts.css";
+/* layer(base) matters: the Google stylesheet sets `display: inline-block` on
+   .material-symbols-outlined, and unlayered rules beat everything in a layer.
+   Without this the icon font would override Tailwind's own display utilities,
+   so `dark:hidden` on an icon would silently do nothing. */
+@import "./fonts.css" layer(base);
 
 /* Scan templates and Python files for utility classes. */
 @source "../templates";
 @source "../../Backend/content";
+
+/* Dark mode is driven by data-theme on <html>, which static/js/theme.js sets
+   from the system preference on first visit and from the visitor's saved
+   choice afterwards. A class/attribute (rather than a bare media query) is
+   what lets the toggle override the system. */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* ---- Theme (Tailwind v4 CSS-first config) ---- */
 @theme {
@@ -29,9 +39,16 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Tells the browser to render scrollbars, form controls and the like in
+       the matching scheme. Overridden per theme below. */
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
   }
   body {
-    @apply antialiased text-slate-800 bg-slate-50;
+    @apply antialiased bg-slate-50 text-slate-800
+           dark:bg-slate-950 dark:text-slate-300;
   }
 }
 
@@ -56,10 +73,19 @@
   .btn-ghost {
     @apply inline-flex items-center gap-2 rounded-lg border border-slate-300
            bg-white px-5 py-2.5 font-medium text-slate-700 transition
-           hover:border-brand-400 hover:text-brand-700;
+           hover:border-brand-400 hover:text-brand-700
+           dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200
+           dark:hover:border-brand-500 dark:hover:text-brand-400;
   }
+
+  /* Cards, panels and anything else that sits on the page background. */
+  .surface {
+    @apply border border-slate-200 bg-white
+           dark:border-slate-800 dark:bg-slate-900;
+  }
+
   .prose-content :where(h2) {
-    @apply mt-6 mb-2 text-xl font-semibold text-slate-900;
+    @apply mt-6 mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100;
   }
   .prose-content :where(p) {
     @apply mb-4 leading-relaxed;
@@ -68,6 +94,6 @@
     @apply mb-4 list-disc pl-6;
   }
   .prose-content :where(a) {
-    @apply text-brand-600 underline;
+    @apply text-brand-600 underline dark:text-brand-400;
   }
 }
