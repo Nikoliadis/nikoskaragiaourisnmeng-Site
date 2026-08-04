@@ -295,6 +295,39 @@ class SecurityHeaderTests(TestCase):
         self.assertTrue(make_password("a-long-enough-passphrase").startswith("argon2"))
 
 
+class StaticAssetTests(TestCase):
+    """Every asset a template asks for must actually exist.
+
+    Regression: the js/ folder and favicon.ico went missing from disk. Nothing
+    failed loudly — the pages still rendered, the browser just 404'd on the
+    scripts, so the theme switch, the dropdowns and the slideshow all quietly
+    stopped working. This turns that into a failing test instead.
+    """
+
+    def test_every_static_reference_resolves(self):
+        import re
+
+        from django.conf import settings
+        from django.contrib.staticfiles import finders
+
+        pattern = re.compile(r"{%\s*static\s*['\"]([^'\"]+)['\"]\s*%}")
+        referenced = set()
+        for template_dir in settings.TEMPLATES[0]["DIRS"]:
+            for path in Path(template_dir).rglob("*.html"):
+                referenced.update(pattern.findall(path.read_text(encoding="utf-8")))
+
+        self.assertTrue(referenced, "no {% static %} references found — bad glob?")
+        missing = [name for name in sorted(referenced) if finders.find(name) is None]
+        self.assertEqual(missing, [], f"static files referenced but not on disk: {missing}")
+
+    def test_the_scripts_the_pages_depend_on_are_present(self):
+        from django.contrib.staticfiles import finders
+
+        for name in ("js/theme.js", "js/site.js", "js/hero.js", "js/htmx.min.js"):
+            with self.subTest(name=name):
+                self.assertIsNotNone(finders.find(name), f"{name} is missing")
+
+
 class ThemeTests(TestCase):
     """Light/dark switching. The theme itself is CSS, so these guard the wiring."""
 
