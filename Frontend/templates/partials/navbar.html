@@ -26,8 +26,8 @@
     <ul class="ml-auto hidden flex-wrap items-center justify-end gap-y-1 py-1.5 min-[1340px]:flex">
       <li>
         <a href="{{ home_url }}"
-           class="flex items-center rounded-md px-2 py-2 transition hover:bg-slate-100 hover:text-brand-700 dark:hover:bg-slate-800 dark:hover:text-brand-400 {% if request.path == home_url %}text-brand-700 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400{% endif %}"
-           aria-label="Αρχική σελίδα" title="Αρχική σελίδα">
+           class="tip flex items-center rounded-md px-2 py-2 transition hover:bg-slate-100 hover:text-brand-700 dark:hover:bg-slate-800 dark:hover:text-brand-400 {% if request.path == home_url %}text-brand-700 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400{% endif %}"
+           aria-label="Αρχική σελίδα" data-tip="Αρχική σελίδα">
           <span class="material-symbols-outlined text-xl">home</span>
         </a>
       </li>
@@ -70,7 +70,7 @@
     <!-- Mobile: theme toggle + menu button -->
     <div class="ml-auto flex items-center gap-1 min-[1340px]:hidden">
       {% include "partials/theme_toggle.html" %}
-      <button data-toggle="mobile-menu" class="inline-flex items-center rounded-md p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Μενού">
+      <button data-toggle="mobile-menu" class="tip inline-flex items-center rounded-md p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Μενού" data-tip="Μενού">
         <span class="material-symbols-outlined">menu</span>
       </button>
     </div>

@@ -399,6 +399,24 @@ class InteractionTests(ProtectedMediaTestCase):
 
         self.assertNotContains(self.client.get(reverse("content:home")), doc.title)
 
+    def test_feedback_affordances_are_present(self):
+        home = self.client.get(reverse("content:home")).content.decode()
+        contact = self.client.get(reverse("content:contact")).content.decode()
+
+        # Downloads are silent, so the click needs a confirmation to land in.
+        self.assertIn('id="toast-area"', home)
+        self.assertIn('aria-live="polite"', home)
+        # The submit button shows it is working instead of looking ignored.
+        self.assertIn("btn-spinner", contact)
+
+    def test_icon_only_controls_explain_themselves(self):
+        html = self.client.get(reverse("content:home")).content.decode()
+
+        for tag in re.finditer(r"<(?:a|button)\b[^>]*data-tip=[^>]*>", html):
+            with self.subTest(tag=tag.group()[:70]):
+                # A tooltip is not a substitute for a name a screen reader reads.
+                self.assertIn("aria-label=", tag.group())
+
     def test_content_is_visible_without_javascript(self):
         """no-js on <html> keeps revealed elements from staying invisible."""
         html = self.client.get(reverse("content:home")).content.decode()

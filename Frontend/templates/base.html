@@ -63,6 +63,8 @@
 {% endcomment %}
 <body class="flex min-h-full flex-col font-sans" hx-boost="true">
   <div id="page-progress" aria-hidden="true"></div>
+  {# Confirmations for actions the browser performs silently, e.g. a download. #}
+  <div id="toast-area" aria-live="polite" aria-atomic="false"></div>
 
   {% include "partials/navbar.html" %}
 

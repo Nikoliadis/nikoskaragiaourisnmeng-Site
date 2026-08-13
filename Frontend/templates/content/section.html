@@ -20,7 +20,7 @@
           <div>
             <h2 class="font-semibold text-slate-900 group-hover:text-brand-700 dark:text-slate-100">{{ cat.name }}</h2>
             <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-              {{ cat.doc_count }} αρχεί{{ cat.doc_count|pluralize:"ο,α" }}
+              <span data-count="{{ cat.doc_count }}">{{ cat.doc_count }}</span> αρχεί{{ cat.doc_count|pluralize:"ο,α" }}
               {% if cat.children.count %}· {{ cat.children.count }} υποκατηγορ{{ cat.children.count|pluralize:"ία,ίες" }}{% endif %}
             </p>
           </div>

@@ -29,8 +29,16 @@
     {% for e in form.message.errors %}<p class="mt-1 text-sm text-red-600">{{ e }}</p>{% endfor %}
   </div>
 
-  <button type="submit" class="btn-primary w-full justify-center">
-    <span class="material-symbols-outlined text-base">send</span>
-    Αποστολή μηνύματος
+  {% comment %}
+    htmx puts .htmx-request on the form while the message is in flight, which
+    swaps the label for a spinner — the visitor sees the click did something
+    and cannot send the same message twice by accident.
+  {% endcomment %}
+  <button type="submit" class="btn-primary relative w-full justify-center">
+    <span class="btn-spinner" aria-hidden="true"></span>
+    <span class="btn-label flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">send</span>
+      Αποστολή μηνύματος
+    </span>
   </button>
 </form>

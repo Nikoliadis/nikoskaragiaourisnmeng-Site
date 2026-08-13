@@ -111,6 +111,15 @@ function setUpReveal() {
     return;
   }
 
+  // Anything the visitor can already see is shown immediately, unanimated.
+  // Fading in content that is on screen the moment the page opens just delays
+  // it — the effect belongs to what arrives later, as you scroll.
+  targets.forEach((el) => {
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
+      el.classList.add("is-visible", "reveal-instant");
+    }
+  });
+
   const STAGGER = 110; // ms between neighbours arriving together
 
   const observer = new IntersectionObserver(
@@ -130,7 +139,10 @@ function setUpReveal() {
     { rootMargin: "0px 0px -5% 0px", threshold: 0.01 }
   );
 
-  targets.forEach((el) => observer.observe(el));
+  // Only what is still hidden needs watching.
+  targets.forEach((el) => {
+    if (!el.classList.contains("is-visible")) observer.observe(el);
+  });
 
   // Safety net. Content that is merely animated must never end up permanently
   // invisible — if the observer misses an element (an odd layout, a page
@@ -141,6 +153,106 @@ function setUpReveal() {
       if (box.top < window.innerHeight * 1.5) el.classList.add("is-visible");
     });
   }, 1200);
+}
+
+// ---------------------------------------------------------------------------
+// Toast — confirmation for actions the browser performs silently
+// ---------------------------------------------------------------------------
+function toast(message, icon = "check_circle") {
+  const area = document.getElementById("toast-area");
+  if (!area) return;
+
+  const node = document.createElement("div");
+  node.className = "toast";
+  node.setAttribute("role", "status");
+  const symbol = document.createElement("span");
+  symbol.className = "material-symbols-outlined text-base text-brand-600 dark:text-brand-400";
+  symbol.textContent = icon;
+  node.append(symbol, document.createTextNode(message));
+  area.append(node);
+
+  setTimeout(() => {
+    node.classList.add("is-leaving");
+    node.addEventListener("animationend", () => node.remove(), { once: true });
+  }, 2600);
+}
+
+// ---------------------------------------------------------------------------
+// Downloads: confirm the click, and remember what has already been taken
+// ---------------------------------------------------------------------------
+const DOWNLOADED_KEY = "downloaded";
+
+function readDownloaded() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DOWNLOADED_KEY) || "[]"));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function markDownloaded(href, card) {
+  if (card) card.classList.add("is-downloaded");
+  try {
+    const seen = readDownloaded();
+    seen.add(href);
+    localStorage.setItem(DOWNLOADED_KEY, JSON.stringify([...seen]));
+  } catch (e) {
+    /* private mode — the badge just won't survive a reload */
+  }
+}
+
+function setUpDownloads() {
+  const seen = readDownloaded();
+  document.querySelectorAll('a[href^="/lipsi/"]').forEach((link) => {
+    const card = link.closest("[data-filter-item], article");
+    if (seen.has(link.getAttribute("href")) && card) card.classList.add("is-downloaded");
+  });
+}
+
+document.addEventListener("click", (e) => {
+  const link = e.target.closest('a[href^="/lipsi/"]');
+  if (!link) return;
+  // The browser downloads without changing the page, so nothing would tell the
+  // visitor it worked.
+  markDownloaded(link.getAttribute("href"), link.closest("[data-filter-item], article"));
+  toast("Η λήψη ξεκίνησε", "download_done");
+});
+
+// ---------------------------------------------------------------------------
+// Counters that tick up when they scroll into view
+// ---------------------------------------------------------------------------
+function setUpCounters() {
+  const counters = document.querySelectorAll("[data-count]:not(.counted)");
+  if (!counters.length || !("IntersectionObserver" in window)) return;
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    counters.forEach((el) => el.classList.add("counted"));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      observer.unobserve(el);
+      el.classList.add("counted");
+
+      const target = Number(el.dataset.count) || 0;
+      if (target < 2) return; // nothing to watch tick from 0 to 1
+      const duration = 600;
+      const started = performance.now();
+      const step = (now) => {
+        const progress = Math.min((now - started) / duration, 1);
+        // Ease out, so it slows as it lands on the real number.
+        el.textContent = Math.round(target * (1 - Math.pow(1 - progress, 3)));
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      el.textContent = "0";
+      requestAnimationFrame(step);
+    });
+  }, { threshold: 0.4 });
+
+  counters.forEach((el) => observer.observe(el));
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +296,8 @@ function initPage() {
   setUpFilter();
   setUpReveal();
   setUpBackToTop();
+  setUpDownloads();
+  setUpCounters();
 }
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -112,6 +112,12 @@
        stopping dead. Elements stagger through a delay set by site.js. */
     animation: nk-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   }
+  /* Already on screen when the page loaded: show it at once. Animating content
+     the visitor is looking at only delays it and reads as a slow page. */
+  [data-reveal].reveal-instant {
+    opacity: 1;
+    animation: none;
+  }
   .no-js [data-reveal] {
     opacity: 1;
     animation: none;
@@ -147,6 +153,69 @@
   #page-progress.is-done {
     transform: scaleX(1);
     opacity: 0;
+  }
+
+  /* ---- Toast -----------------------------------------------------------
+     Brief confirmation after an action that the browser handles silently,
+     chiefly a download. Uses the existing surface colours; no new palette. */
+  #toast-area {
+    @apply pointer-events-none fixed inset-x-0 bottom-5 z-[70] flex flex-col
+           items-center gap-2 px-4;
+  }
+  .toast {
+    @apply flex items-center gap-2 rounded-full border border-slate-200 bg-white
+           px-4 py-2 text-sm text-slate-700 shadow-lg
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200;
+    animation: nk-toast-in 0.25s ease-out;
+  }
+  .toast.is-leaving {
+    animation: nk-toast-out 0.25s ease-in forwards;
+  }
+  @keyframes nk-toast-in {
+    from { opacity: 0; translate: 0 0.75rem; }
+  }
+  @keyframes nk-toast-out {
+    to { opacity: 0; translate: 0 0.5rem; }
+  }
+
+  /* A file this visitor has already downloaded, remembered in their browser. */
+  .is-downloaded .doc-icon {
+    @apply bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-400;
+  }
+
+  /* ---- Tooltip ---------------------------------------------------------
+     For the icon-only controls. Pure CSS, shown on hover and on keyboard
+     focus, so it is not a mouse-only affordance. */
+  .tip {
+    @apply relative;
+  }
+  .tip::after {
+    content: attr(data-tip);
+    @apply pointer-events-none absolute left-1/2 top-full z-50 mt-2 hidden
+           -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1
+           text-xs font-medium text-white shadow-md
+           dark:bg-slate-700;
+  }
+  .tip:hover::after,
+  .tip:focus-visible::after {
+    @apply block;
+    animation: nk-tip-in 0.15s ease-out;
+  }
+  @keyframes nk-tip-in {
+    from { opacity: 0; translate: -50% -0.25rem; }
+  }
+
+  /* ---- Busy state ------------------------------------------------------
+     htmx sets .htmx-request on the form while it is in flight. */
+  .htmx-request .btn-label {
+    @apply invisible;
+  }
+  .htmx-request .btn-spinner {
+    @apply block;
+  }
+  .btn-spinner {
+    @apply absolute hidden h-4 w-4 animate-spin rounded-full border-2
+           border-white/40 border-t-white;
   }
 
   /* Back-to-top button, hidden until the visitor has scrolled a screenful. */
