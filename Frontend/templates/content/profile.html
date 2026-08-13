@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ποιος είμαι — Νικόλαος Καραγκιαούρης{% endblock %}
+{% block description %}Νικόλαος Καραγκιαούρης — Ναυπηγός και Μηχανολόγος Μηχανικός. Καθηγητής μαθημάτων ειδικότητας ΕΠΑΛ στους τομείς Μηχανολογίας, Οχημάτων, Ηλεκτρολογίας, Ηλεκτρονικής και Ναυτικού.{% endblock %}
+
+{% block content %}
+<div class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+  <div class="container-page py-10">
+    <nav class="mb-2 text-sm text-slate-400 dark:text-slate-500">
+      <a href="{% url 'content:home' %}" class="hover:text-brand-600 dark:hover:text-brand-400">Αρχική</a> /
+      <span class="text-slate-600 dark:text-slate-300">Ποιος είμαι</span>
+    </nav>
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</h1>
+    <p class="mt-1 text-lg text-brand-600 dark:text-brand-400">Ναυπηγός και Μηχανολόγος Μηχανικός</p>
+    <div class="mt-4">{% include "partials/social_links.html" %}</div>
+  </div>
+</div>
+
+<div class="container-page py-12">
+  <div class="grid gap-10 lg:grid-cols-3">
+
+    <!-- Σύνοψη -->
+    <div class="lg:col-span-2" data-reveal>
+      <p class="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+        Διδάσκω μαθήματα ειδικότητας ΕΠΑΛ από το 2008. Πριν από την αίθουσα πέρασα
+        επτά χρόνια στα <strong class="font-semibold text-slate-900 dark:text-slate-100">Ελληνικά Ναυπηγεία</strong>,
+        στη διαχείριση έργων και στον προγραμματισμό παραγωγής — και αυτή η εμπειρία
+        είναι που φέρνω στο μάθημα: όχι μόνο η θεωρία, αλλά και το πώς εφαρμόζεται
+        στην πράξη.
+      </p>
+      <p class="mt-4 leading-relaxed text-slate-600 dark:text-slate-400">
+        Έχω δύο πτυχία μηχανικού — Μηχανολογίας και Ναυπηγικής — και δύο
+        μεταπτυχιακά, στη σχεδίαση συστημάτων αγωνιστικών οχημάτων και στα
+        ενεργειακά και περιβαλλοντικά έργα. Το υλικό αυτής της ιστοσελίδας
+        προέρχεται από αυτή τη διδασκαλία.
+      </p>
+    </div>
+
+    <!-- Τομείς διδασκαλίας -->
+    <aside class="surface rounded-2xl p-6" data-reveal data-reveal-delay="100">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Τομείς διδασκαλίας</h2>
+      <ul class="mt-4 space-y-2 text-slate-700 dark:text-slate-300">
+        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-base text-brand-500">check</span>Μηχανολογίας</li>
+        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-base text-brand-500">check</span>Οχημάτων</li>
+        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-base text-brand-500">check</span>Ηλεκτρολογίας</li>
+        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-base text-brand-500">check</span>Ηλεκτρονικής</li>
+        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-base text-brand-500">check</span>Ναυτικού Πλοιάρχων – Μηχανικών</li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Διδακτική εμπειρία -->
+  <section class="mt-14">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Διδακτική εμπειρία</h2>
+    <ol class="mt-6 space-y-5 border-l-2 border-slate-200 pl-6 dark:border-slate-800">
+      <li data-reveal class="relative">
+        <span class="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-brand-500 dark:border-slate-950"></span>
+        <p class="text-sm font-medium text-brand-600 dark:text-brand-400">2008 – σήμερα</p>
+        <h3 class="mt-1 font-semibold text-slate-900 dark:text-slate-100">Ακαδημαϊκός υπεύθυνος &amp; καθηγητής — Φροντιστήρια Πουκαμισάς</h3>
+        <p class="mt-1 text-slate-600 dark:text-slate-400">Μαθήματα ειδικότητας ΕΠΑΛ στους τομείς Μηχανολογίας, Οχημάτων, Ηλεκτρολογίας, Ηλεκτρονικής και Ναυτικού.</p>
+      </li>
+      <li data-reveal class="relative">
+        <span class="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-brand-400 dark:border-slate-950"></span>
+        <p class="text-sm font-medium text-brand-600 dark:text-brand-400">2014 – 2019</p>
+        <h3 class="mt-1 font-semibold text-slate-900 dark:text-slate-100">Εκπαιδευτής — ΙΕΚ ΑΚΜΗ</h3>
+        <p class="mt-1 text-slate-600 dark:text-slate-400">Μαθήματα ειδικότητας.</p>
+      </li>
+      <li data-reveal class="relative">
+        <span class="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-brand-400 dark:border-slate-950"></span>
+        <p class="text-sm font-medium text-brand-600 dark:text-brand-400">2005 – 2015</p>
+        <h3 class="mt-1 font-semibold text-slate-900 dark:text-slate-100">Εξετάσεις πιστοποίησης ΙΕΚ</h3>
+        <p class="mt-1 text-slate-600 dark:text-slate-400">Συμμετοχή στις εξετάσεις πιστοποίησης αποφοίτων ΙΕΚ.</p>
+      </li>
+      <li data-reveal class="relative">
+        <span class="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-brand-400 dark:border-slate-950"></span>
+        <p class="text-sm font-medium text-brand-600 dark:text-brand-400">2005 – 2013</p>
+        <h3 class="mt-1 font-semibold text-slate-900 dark:text-slate-100">Εκπαιδευτής — Δημόσια ΙΕΚ</h3>
+        <p class="mt-1 text-slate-600 dark:text-slate-400">Μαθήματα ειδικότητας, 1.158 ώρες διδασκαλίας.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Επαγγελματική εμπειρία -->
+  <section class="mt-14">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Επαγγελματική εμπειρία</h2>
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      <article class="surface rounded-2xl p-6" data-reveal>
+        <p class="text-sm font-medium text-brand-600 dark:text-brand-400">2004 – 2011</p>
+        <h3 class="mt-1 font-semibold text-slate-900 dark:text-slate-100">Ελληνικά Ναυπηγεία Α.Ε.</h3>
+        <p class="mt-2 text-slate-600 dark:text-slate-400">
+          Διαχείριση έργων και ανθρώπινου δυναμικού, προγραμματισμός παραγωγής
+          τροχαίου υλικού: χρονοδιαγράμματα, παρακολούθηση πορείας και αποκλίσεων,
+          αναφορές προόδου. Διαχείριση εντολών εργασίας σε SAP R/3.
+        </p>
+      </article>
+      <article class="surface rounded-2xl p-6" data-reveal data-reveal-delay="100">
+        <p class="text-sm font-medium text-brand-600 dark:text-brand-400">2000</p>
+        <h3 class="mt-1 font-semibold text-slate-900 dark:text-slate-100">Π.Ν. Μαρίνης Ε.Π.Ε.</h3>
+        <p class="mt-2 text-slate-600 dark:text-slate-400">
+          Επίβλεψη κατασκευής πρατηρίων καυσίμων.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Σπουδές -->
+  <section class="mt-14">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Σπουδές</h2>
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      <article class="surface rounded-2xl p-6" data-reveal>
+        <span class="inline-flex rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:bg-slate-800 dark:text-brand-400">Μεταπτυχιακό</span>
+        <h3 class="mt-2 font-semibold text-slate-900 dark:text-slate-100">Ενεργειακά &amp; Περιβαλλοντικά Έργα</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Πανεπιστήμιο Δυτικής Αττικής, Σχολή Μηχανολόγων Μηχανικών</p>
+      </article>
+      <article class="surface rounded-2xl p-6" data-reveal data-reveal-delay="80">
+        <span class="inline-flex rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:bg-slate-800 dark:text-brand-400">Μεταπτυχιακό</span>
+        <h3 class="mt-2 font-semibold text-slate-900 dark:text-slate-100">Σχεδίαση &amp; Κατασκευή Συστημάτων Αγωνιστικών Οχημάτων</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">ΤΕΙ Στερεάς Ελλάδας, 2015 – 2018</p>
+      </article>
+      <article class="surface rounded-2xl p-6" data-reveal data-reveal-delay="160">
+        <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">Πτυχίο</span>
+        <h3 class="mt-2 font-semibold text-slate-900 dark:text-slate-100">Ναυπηγική</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">ΤΕΙ Αθήνας — Τεχνολόγος Ναυπηγός Μηχανικός</p>
+      </article>
+      <article class="surface rounded-2xl p-6" data-reveal data-reveal-delay="240">
+        <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">Πτυχίο</span>
+        <h3 class="mt-2 font-semibold text-slate-900 dark:text-slate-100">Μηχανολογία</h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">ΤΕΙ Χαλκίδας — Ενεργειακός τομέας</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Εξειδίκευση -->
+  <section class="mt-14">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Εξειδίκευση &amp; πιστοποιήσεις</h2>
+    <div class="mt-6 flex flex-wrap gap-2" data-reveal>
+      {% for skill in specialisations %}
+        <span class="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{{ skill }}</span>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="surface mt-14 flex flex-col items-center gap-4 rounded-2xl p-8 text-center sm:flex-row sm:justify-between sm:text-left" data-reveal>
+    <div>
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Έχεις κάποια ερώτηση;</h2>
+      <p class="mt-1 text-slate-500 dark:text-slate-400">Στείλε μου μήνυμα και θα σου απαντήσω σύντομα.</p>
+    </div>
+    <a href="{% url 'content:contact' %}" class="btn-primary shrink-0">Επικοινωνία</a>
+  </div>
+</div>
+{% endblock %}

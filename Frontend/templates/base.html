@@ -17,8 +17,32 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon_io/favicon-16x16.png' %}">
   <link rel="apple-touch-icon" href="{% static 'favicon_io/apple-touch-icon.png' %}">
   <link rel="manifest" href="{% static 'favicon_io/site.webmanifest' %}">
+  {% comment %}
+    htmx injects a <style> block for its loading indicator, which the CSP
+    blocks — a console error on every page. We don't use that indicator (the
+    progress bar is ours), so switch it off. A meta tag is configuration, not
+    an inline script, so the strict policy is untouched.
+  {% endcomment %}
+  <meta name="htmx-config" content='{"includeIndicatorStyles":false}'>
+
   <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)">
+
+  {% comment %}
+    Open Graph / Twitter cards: what Viber, Messenger and Facebook show when
+    the teacher sends the link to his students. Without these the link arrives
+    as a bare URL with no title or picture.
+  {% endcomment %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Νικόλαος Καραγκιαούρης">
+  <meta property="og:locale" content="el_GR">
+  <meta property="og:title" content="{% block og_title %}Νικόλαος Καραγκιαούρης — Εκπαιδευτικό υλικό Μηχανολογίας{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Παλιά θέματα, ασκήσεις, εργασίες και e-books για τους μαθητές των ΕΠΑΛ — οργανωμένα και έτοιμα για λήψη.{% endblock %}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-preview.jpg' %}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
 
   {% comment %}
     Fonts are bundled into app.css from Frontend/static/fonts — nothing is

@@ -89,21 +89,38 @@
   /* ---- Motion ----------------------------------------------------------
      Elements marked data-reveal start slightly offset and fade in when they
      scroll into view; static/js/site.js adds .is-visible. If JavaScript never
-     runs, or the visitor asked for less motion, they are simply visible. */
+     runs, or the visitor asked for less motion, they are simply visible.
+
+     An animation, not a transition. Most of these elements also carry
+     Tailwind's `transition` utility for their hover effect, and that utility
+     wins the cascade — it was squashing the reveal to its own 150ms, fast
+     enough to look like nothing happened. An animation cannot be overridden
+     that way, and because it has no fill-mode it releases the element
+     afterwards, leaving the hover lift free to work. */
+  @keyframes nk-reveal {
+    from {
+      opacity: 0;
+      translate: 0 1.5rem;
+    }
+  }
   [data-reveal] {
-    @apply opacity-0 translate-y-4;
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    opacity: 0;
   }
   [data-reveal].is-visible {
-    @apply opacity-100 translate-y-0;
+    opacity: 1;
+    /* Slow enough to register, eased so it decelerates into place rather than
+       stopping dead. Elements stagger through a delay set by site.js. */
+    animation: nk-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .no-js [data-reveal] {
-    @apply opacity-100 translate-y-0;
+    opacity: 1;
+    animation: none;
   }
   @media (prefers-reduced-motion: reduce) {
-    [data-reveal] {
-      @apply opacity-100 translate-y-0;
-      transition: none;
+    [data-reveal],
+    [data-reveal].is-visible {
+      opacity: 1;
+      animation: none;
     }
   }
 

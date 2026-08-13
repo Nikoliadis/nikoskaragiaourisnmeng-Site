@@ -379,10 +379,110 @@ class InteractionTests(ProtectedMediaTestCase):
         self.assertIn('id="page-progress"', html)
         self.assertIn('id="back-to-top"', html)
 
+    def test_recently_added_material_appears_on_the_home_page(self):
+        category = self.make_documents(8)
+        newest = Document.objects.create(
+            title="Ολοκαίνουριο", category=category, file=upload("new.pdf", PDF_BYTES)
+        )
+        response = self.client.get(reverse("content:home"))
+
+        self.assertContains(response, "Πρόσφατο υλικό")
+        self.assertContains(response, newest.title)
+        # Six at most, newest first.
+        self.assertEqual(len(response.context["recent_documents"]), 6)
+        self.assertEqual(response.context["recent_documents"][0], newest)
+
+    def test_hidden_documents_stay_off_the_home_page(self):
+        category = self.make_documents(1)
+        doc = Document.objects.get(category=category)
+        Document.objects.filter(pk=doc.pk).update(is_active=False)
+
+        self.assertNotContains(self.client.get(reverse("content:home")), doc.title)
+
     def test_content_is_visible_without_javascript(self):
         """no-js on <html> keeps revealed elements from staying invisible."""
         html = self.client.get(reverse("content:home")).content.decode()
         self.assertRegex(html, r"<html[^>]*\bno-js\b")
+
+
+class ProfileTests(TestCase):
+    def test_page_shows_the_professional_history(self):
+        response = self.client.get(reverse("content:profile"))
+
+        self.assertEqual(response.status_code, 200)
+        for fact in (
+            "Ελληνικά Ναυπηγεία",
+            "Φροντιστήρια Πουκαμισάς",
+            "ΙΕΚ ΑΚΜΗ",
+            "Ναυπηγική",
+            "Μηχανολογία",
+            "AutoCAD",
+        ):
+            with self.subTest(fact=fact):
+                self.assertContains(response, fact)
+
+    def test_private_details_from_the_cv_are_never_published(self):
+        """Guards against someone later pasting the CV in wholesale.
+
+        A home address, mobile number, date of birth and registry numbers on a
+        public page are what identity theft is built from, and students have no
+        use for them.
+        """
+        response = self.client.get(reverse("content:profile"))
+        body = response.content.decode()
+
+        for private in (
+            "Αγίου Ελευθερίου",   # home address
+            "18541",              # postcode
+            "6972418502",         # mobile
+            "2104828138",         # landline
+            "23-03-1976",         # date of birth
+            "10100066997",        # military registry number
+            "35334",              # teaching licence number
+            "6,45", "7,09", "8,98",  # degree marks
+        ):
+            with self.subTest(private=private):
+                self.assertNotIn(private, body)
+
+    def test_the_profile_is_reachable_from_the_rest_of_the_site(self):
+        url = reverse("content:profile")
+        for page in (reverse("content:home"), reverse("content:contact")):
+            with self.subTest(page=page):
+                self.assertContains(self.client.get(page), f'href="{url}"')
+
+
+class SocialAndSharingTests(TestCase):
+    ACCOUNTS = (
+        "https://www.instagram.com/nick_vehicle_dynamics/",
+        "https://www.tiktok.com/@nikos.vehicle.dyn",
+    )
+
+    def test_social_links_open_safely_in_a_new_tab(self):
+        html = self.client.get(reverse("content:home")).content.decode()
+
+        for url in self.ACCOUNTS:
+            with self.subTest(url=url):
+                self.assertIn(url, html)
+        # rel=noopener stops the opened page reaching back into this one.
+        for match in re.finditer(r'<a[^>]+(?:instagram|tiktok)\.com[^>]*>', html):
+            with self.subTest(tag=match.group()[:80]):
+                self.assertIn('target="_blank"', match.group())
+                self.assertIn("noopener", match.group())
+                self.assertIn("noreferrer", match.group())
+
+    def test_pages_carry_an_open_graph_preview(self):
+        response = self.client.get(reverse("content:home"))
+
+        for tag in ('property="og:title"', 'property="og:description"',
+                    'property="og:image"', 'property="og:url"',
+                    'name="twitter:card"'):
+            with self.subTest(tag=tag):
+                self.assertContains(response, tag)
+
+    def test_the_preview_image_exists(self):
+        from django.contrib.staticfiles import finders
+
+        self.assertIsNotNone(finders.find("img/og-preview.jpg"))
 
 
 class ThemeTests(TestCase):

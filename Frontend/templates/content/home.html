@@ -43,7 +43,7 @@
 <section class="container-page -mt-10 relative z-10">
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for card in cards %}
-      <a href="{% url 'content:section' section=card.section %}" data-reveal data-reveal-delay="{{ forloop.counter0 }}00" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg active:scale-[0.99] dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
+      <a href="{% url 'content:section' section=card.section %}" data-reveal class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg active:scale-[0.99] dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
         <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition dark:bg-slate-800 dark:text-brand-400">
           <span class="material-symbols-outlined">{{ card.icon }}</span>
         </div>
@@ -61,6 +61,39 @@
   </div>
 </section>
 
+<!-- Recently added material -->
+{% if recent_documents %}
+<section class="container-page mt-16">
+  <div class="mb-6 flex items-end justify-between">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Πρόσφατο υλικό</h2>
+    <a href="{% url 'content:section' section='panellinies' %}" class="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">Όλο το υλικό →</a>
+  </div>
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    {% for doc in recent_documents %}{% include "content/partials/document_card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Ποιος είμαι -->
+<section class="container-page mt-16">
+  <div class="surface flex flex-col items-start gap-6 rounded-2xl p-8 sm:flex-row sm:items-center" data-reveal>
+    <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400">
+      <span class="material-symbols-outlined text-3xl">engineering</span>
+    </div>
+    <div class="flex-1">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</h2>
+      <p class="mt-1 text-slate-600 dark:text-slate-400">
+        Ναυπηγός και Μηχανολόγος Μηχανικός, με δύο μεταπτυχιακά και επτά χρόνια στα
+        Ελληνικά Ναυπηγεία. Διδάσκω μαθήματα ειδικότητας ΕΠΑΛ από το 2008.
+      </p>
+      <div class="mt-4 flex flex-wrap items-center gap-4">
+        <a href="{% url 'content:profile' %}" class="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">Περισσότερα για μένα →</a>
+        {% include "partials/social_links.html" %}
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Latest announcements -->
 {% if announcements %}
 <section class="container-page mt-16">
@@ -70,7 +103,7 @@
   </div>
   <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
     {% for a in announcements %}
-      <a href="{{ a.get_absolute_url }}" data-reveal data-reveal-delay="{{ forloop.counter0 }}00" class="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-900 dark:border-slate-800">
+      <a href="{{ a.get_absolute_url }}" data-reveal class="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-900 dark:border-slate-800">
         {% if a.image %}<img src="{{ a.image.url }}" alt="{{ a.title }}" class="h-40 w-full object-cover">{% endif %}
         <div class="flex flex-1 flex-col p-5">
           <time class="text-xs text-slate-400 dark:text-slate-500">{{ a.created_at|date:"d/m/Y" }}</time>

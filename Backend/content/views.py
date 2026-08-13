@@ -64,10 +64,21 @@ def home(request):
         {"section": value, "icon": SECTION_ICONS.get(value, "folder"), "label": label}
         for value, label in Section.choices
     ]
+    # What a returning student actually wants: what went up since last time.
+    recent = (
+        Document.objects.filter(is_active=True, category__is_active=True)
+        .select_related("category")
+        .order_by("-uploaded_at")[:6]
+    )
     return render(
         request,
         "content/home.html",
-        {"announcements": latest, "cards": cards, "hero_slides": HERO_SLIDES},
+        {
+            "announcements": latest,
+            "cards": cards,
+            "hero_slides": HERO_SLIDES,
+            "recent_documents": recent,
+        },
     )
 
 
@@ -98,6 +109,32 @@ def category_view(request, slug):
         "content/category.html",
         {"category": category, "documents": documents},
     )
+
+
+def profile(request):
+    """The teacher's professional profile.
+
+    Everything here is public-facing detail from his CV. The private parts —
+    home address, mobile number, date of birth, military and licence numbers,
+    degree marks — are deliberately not published; students and parents have no
+    need for them and they are exactly what identity theft feeds on. Contact
+    goes through the form instead.
+    """
+    specialisations = [
+        _("Σχεδίαση αγωνιστικών οχημάτων"),
+        _("Δυναμική οχήματος"),
+        _("Ενεργειακά & περιβαλλοντικά έργα"),
+        _("Ανεμογεννήτριες & αιολικά πάρκα"),
+        _("Φωτοβολταϊκά συστήματα"),
+        _("Δίκτυα φυσικού αερίου"),
+        _("Συστήματα CAD – CAM"),
+        _("AutoCAD (ECDL CAD)"),
+        _("Βιομηχανική παραγωγή & ποιοτικός έλεγχος"),
+        _("Θερμαντικός & ψυκτικός εξοπλισμός"),
+        _("SAP R/3"),
+        _("Αγγλικά"),
+    ]
+    return render(request, "content/profile.html", {"specialisations": specialisations})
 
 
 def announcements(request):

@@ -16,7 +16,12 @@
     <div class="flex items-start gap-4">
       <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400"><span class="material-symbols-outlined">person</span></div>
       <div>
-        <h3 class="font-semibold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</h3>  
+        <h3 class="font-semibold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Ναυπηγός και Μηχανολόγος Μηχανικός ·
+          <a href="{% url 'content:profile' %}" class="text-brand-600 hover:underline dark:text-brand-400">Ποιος είμαι</a>
+        </p>
+        <div class="mt-3">{% include "partials/social_links.html" %}</div>
       </div>
     </div>
     <div class="flex items-start gap-4">

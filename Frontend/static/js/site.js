@@ -111,20 +111,36 @@ function setUpReveal() {
     return;
   }
 
+  const STAGGER = 110; // ms between neighbours arriving together
+
   const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        // A small stagger reads as one movement rather than a popcorn effect.
-        const delay = Number(entry.target.dataset.revealDelay || 0);
+      // Everything that came into view in this pass, in document order, so a
+      // row of cards arrives one after another instead of all at once.
+      const arriving = entries.filter((entry) => entry.isIntersecting);
+      arriving.forEach((entry, index) => {
+        const explicit = entry.target.dataset.revealDelay;
+        const delay = explicit !== undefined ? Number(explicit) : index * STAGGER;
         setTimeout(() => entry.target.classList.add("is-visible"), delay);
         observer.unobserve(entry.target);
       });
     },
-    { rootMargin: "0px 0px -10% 0px", threshold: 0.05 }
+    // Start a little before the element is fully in view, so the movement is
+    // finishing as the visitor's eye reaches it.
+    { rootMargin: "0px 0px -5% 0px", threshold: 0.01 }
   );
 
   targets.forEach((el) => observer.observe(el));
+
+  // Safety net. Content that is merely animated must never end up permanently
+  // invisible — if the observer misses an element (an odd layout, a page
+  // restored from the back/forward cache, a browser quirk), show it anyway.
+  setTimeout(() => {
+    document.querySelectorAll("[data-reveal]:not(.is-visible)").forEach((el) => {
+      const box = el.getBoundingClientRect();
+      if (box.top < window.innerHeight * 1.5) el.classList.add("is-visible");
+    });
+  }, 1200);
 }
 
 // ---------------------------------------------------------------------------

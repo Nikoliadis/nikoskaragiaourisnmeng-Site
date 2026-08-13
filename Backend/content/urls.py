@@ -9,6 +9,7 @@ app_name = "content"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("profil/", views.profile, name="profile"),
     path("enimerosi/", views.announcements, name="announcements"),
     path("enimerosi/<uslug:slug>/", views.announcement_detail, name="announcement"),
     path("epikoinonia/", views.contact, name="contact"),

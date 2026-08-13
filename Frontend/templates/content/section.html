@@ -15,7 +15,7 @@
   {% if roots %}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {% for cat in roots %}
-        <a href="{{ cat.get_absolute_url }}" data-reveal data-reveal-delay="{{ forloop.counter0|add:forloop.counter0 }}0"
+        <a href="{{ cat.get_absolute_url }}" data-reveal
            class="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md active:scale-[0.99] dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
           <div>
             <h2 class="font-semibold text-slate-900 group-hover:text-brand-700 dark:text-slate-100">{{ cat.name }}</h2>

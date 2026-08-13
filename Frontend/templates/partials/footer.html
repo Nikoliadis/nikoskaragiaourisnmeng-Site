@@ -5,8 +5,12 @@
       <p class="font-semibold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</p>
       <p class="text-sm text-slate-500 dark:text-slate-400">Ναυπηγός και Μηχανολόγος Μηχανικός</p>
     </div>
-    <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-      <a href="{% url 'content:contact' %}" class="hover:text-brand-700 dark:hover:text-brand-400">Επικοινωνία</a>
+    <div class="flex flex-col items-center gap-4 sm:items-end">
+      <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+        <a href="{% url 'content:profile' %}" class="hover:text-brand-700 dark:hover:text-brand-400">Ποιος είμαι</a>
+        <a href="{% url 'content:contact' %}" class="hover:text-brand-700 dark:hover:text-brand-400">Επικοινωνία</a>
+      </div>
+      {% include "partials/social_links.html" %}
     </div>
   </div>
   <div class="border-t border-slate-100 py-4 dark:border-slate-800">
