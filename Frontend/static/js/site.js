@@ -134,9 +134,12 @@ function setUpReveal() {
         observer.unobserve(entry.target);
       });
     },
-    // Start a little before the element is fully in view, so the movement is
-    // finishing as the visitor's eye reaches it.
-    { rootMargin: "0px 0px -5% 0px", threshold: 0.01 }
+    // Wait until the element is properly on screen. A tiny threshold fires
+    // while it is still peeking in at the bottom edge, so the whole animation
+    // plays out of sight and the element looks like it was simply always
+    // there. 15% of it, and 50px clear of the bottom, means the movement
+    // happens where the visitor is actually looking.
+    { rootMargin: "0px 0px -50px 0px", threshold: 0.15 }
   );
 
   // Only what is still hidden needs watching.

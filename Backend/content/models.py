@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import urlparse
 
 from django.db import models
 from django.urls import reverse
@@ -154,6 +155,47 @@ class Document(models.Model):
 
     def get_download_url(self):
         return reverse("content:download", args=[self.pk])
+
+
+class Link(models.Model):
+    """A pointer to material that lives on someone else's site.
+
+    Much of what this teacher hands out is not his to host — exam papers on
+    panellinies.net, the ministry's e-books, the IEP question bank. Copying
+    them would go stale and is not ours to copy; linking keeps the visitor on
+    the authoritative source.
+    """
+
+    title = models.CharField(_("Τίτλος"), max_length=250)
+    url = models.URLField(_("Σύνδεσμος"), max_length=500)
+    description = models.TextField(_("Περιγραφή"), blank=True)
+    category = models.ForeignKey(
+        Category,
+        verbose_name=_("Κατηγορία"),
+        on_delete=models.CASCADE,
+        related_name="links",
+    )
+    order = models.PositiveIntegerField(_("Σειρά"), default=0)
+    is_active = models.BooleanField(_("Ορατός"), default=True)
+    created_at = models.DateTimeField(_("Ημ/νία"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Σύνδεσμος")
+        verbose_name_plural = _("Σύνδεσμοι")
+        ordering = ["order", "title"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["category", "url"], name="unique_link_per_category"
+            )
+        ]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def host(self) -> str:
+        """The site the link points at, shown so visitors know where they go."""
+        return urlparse(self.url).netloc.removeprefix("www.")
 
 
 class Announcement(models.Model):

@@ -1,0 +1,27 @@
+{% comment %}
+  A link to material hosted elsewhere. Deliberately looks like a document card
+  — same surface, same hover — but with an outbound icon and the host name, so
+  the visitor knows before clicking that this one leaves the site.
+{% endcomment %}
+<article data-filter-item data-reveal
+         class="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
+  <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 transition group-hover:scale-105 dark:bg-slate-800 dark:text-brand-400">
+    <span class="material-symbols-outlined">link</span>
+  </div>
+  <div class="min-w-0 flex-1">
+    <h3 class="font-semibold text-slate-900 dark:text-slate-100">{{ link.title }}</h3>
+    {% if link.description %}
+      <p class="mt-0.5 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{{ link.description }}</p>
+    {% endif %}
+    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 dark:text-slate-500">
+      <span class="rounded bg-slate-100 px-1.5 py-0.5 font-semibold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-400">Σύνδεσμος</span>
+      <span class="truncate">{{ link.host }}</span>
+    </div>
+  </div>
+  {% comment %} Not boosted: htmx must not try to fetch another site. {% endcomment %}
+  <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer external" hx-boost="false"
+     class="btn-ghost shrink-0 !px-4 !py-2 text-sm" aria-label="Άνοιγμα «{{ link.title }}» σε νέα καρτέλα">
+    <span class="material-symbols-outlined text-base transition-transform group-hover:translate-x-0.5">open_in_new</span>
+    <span class="hidden sm:inline">Άνοιγμα</span>
+  </a>
+</article>

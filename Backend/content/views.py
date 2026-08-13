@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 from django_ratelimit.decorators import ratelimit
 
 from .forms import ContactForm
-from .models import Announcement, Category, Document, Section
+from .models import Announcement, Category, Document, Link, Section
 from .notifications import send_contact_notification
 
 security_log = logging.getLogger("content.security")
@@ -104,10 +104,15 @@ def section_view(request, section):
 def category_view(request, slug):
     category = get_object_or_404(Category, slug=slug, is_active=True)
     documents = _active_documents(category)
+    # Links live on the category itself and on its direct subcategories, the
+    # same rule the documents follow.
+    links = Link.objects.filter(is_active=True).filter(
+        Q(category=category) | Q(category__parent=category)
+    )
     return render(
         request,
         "content/category.html",
-        {"category": category, "documents": documents},
+        {"category": category, "documents": documents, "links": links},
     )
 
 

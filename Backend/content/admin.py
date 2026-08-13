@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from unfold.admin import ModelAdmin
 from unfold.contrib.forms.widgets import WysiwygWidget
 
-from .models import Announcement, Category, ContactMessage, Document
+from .models import Announcement, Category, ContactMessage, Document, Link
 
 
 @admin.register(Category)
@@ -51,6 +51,20 @@ class DocumentAdmin(ModelAdmin):
             'dark:bg-slate-700 dark:text-slate-200">{}</span>',
             obj.extension or "—",
         )
+
+
+@admin.register(Link)
+class LinkAdmin(ModelAdmin):
+    list_display = ("title", "category", "host", "order", "is_active")
+    list_filter = ("category__section", "category", "is_active")
+    list_editable = ("order", "is_active")
+    search_fields = ("title", "url", "description")
+    autocomplete_fields = ("category",)
+    fields = ("title", "url", "description", "category", "order", "is_active")
+
+    @admin.display(description=_("Ιστότοπος"))
+    def host(self, obj):
+        return obj.host
 
 
 @admin.register(Announcement)
