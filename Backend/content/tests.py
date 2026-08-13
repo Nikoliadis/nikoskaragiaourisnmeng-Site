@@ -17,7 +17,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from .management.commands.setup_menu import MENU
-from .models import Announcement, Category, ContactMessage, Document, Section
+from .models import Announcement, Category, ContactMessage, Document, Link, Section
 from .validators import detect_content_type, validate_filename, validate_upload
 
 # Minimal payloads whose magic bytes are what `filetype` sniffs.
@@ -501,6 +501,40 @@ class SocialAndSharingTests(TestCase):
         from django.contrib.staticfiles import finders
 
         self.assertIsNotNone(finders.find("img/og-preview.jpg"))
+
+
+class LinkTitleTests(TestCase):
+    """A link's label has to tell a student what it is."""
+
+    def test_file_names_and_codes_become_readable_titles(self):
+        from .management.commands.import_links import tidy_title
+
+        cases = [
+            # Percent-encoded Greek, straight from the school blog.
+            ("e_j00106-%CE%9C%CE%95%CE%9A-%CE%91.pdf",
+             "https://blogs.sch.gr/x/e_j00106-%CE%9C%CE%95%CE%9A-%CE%91.pdf",
+             "ΜΕΚ Α"),
+            # The ministry's e-book naming: catalogue code, Greeklish, boilerplate.
+            ("ebooks.edu.gr/ebooks/v/pdf/8547/4112/24-0087-02-V1_Psyksi-Klimatismos_G-EPAL_Vivlio-Mathiti/",
+             "https://ebooks.edu.gr/ebooks/v/pdf/8547/4112/24-0087-02-V1_Psyksi-Klimatismos_G-EPAL_Vivlio-Mathiti/",
+             "Ψύξη Κλιματισμός"),
+            # A real label is left alone apart from the site's own suffix.
+            ("Ναυσιπλοΐα ΕΠΑΛ Θέματα -Panellinies.net",
+             "https://www.panellinies.net/nausiploia/",
+             "Ναυσιπλοΐα ΕΠΑΛ Θέματα"),
+        ]
+        for label, url, expected in cases:
+            with self.subTest(label=label[:40]):
+                self.assertEqual(tidy_title(label, url), expected)
+
+    def test_no_imported_title_still_looks_like_a_file(self):
+        category = Category.objects.create(name="Δοκιμή", section=Section.EBOOKS)
+        Link.objects.create(
+            category=category, title="Ψύξη Κλιματισμός", url="https://example.gr/a"
+        )
+        for link in Link.objects.all():
+            with self.subTest(title=link.title):
+                self.assertNotRegex(link.title, r"%[0-9A-F]{2}|\.pdf$|_")
 
 
 class ThemeTests(TestCase):

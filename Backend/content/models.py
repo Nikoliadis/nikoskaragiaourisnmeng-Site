@@ -74,6 +74,14 @@ class Category(models.Model):
         blank=True,
         help_text=_("Άφησέ το κενό για κατηγορία πρώτου επιπέδου."),
     )
+    description = models.TextField(
+        _("Κείμενο κατηγορίας"),
+        blank=True,
+        help_text=_(
+            "Προαιρετικό κείμενο που εμφανίζεται πάνω από το υλικό — π.χ. ο "
+            "κατάλογος μαθημάτων ή μια υποχρεωτική αναφορά πηγής."
+        ),
+    )
     order = models.PositiveIntegerField(_("Σειρά"), default=0)
     is_active = models.BooleanField(_("Ενεργή"), default=True)
 
@@ -90,6 +98,9 @@ class Category(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = unique_slug(self, self.name)
+        # Same treatment as an announcement: staff-written HTML is sanitised on
+        # the way in, so the template never renders anything executable.
+        self.description = clean_html(self.description)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

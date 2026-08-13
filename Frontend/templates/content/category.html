@@ -26,6 +26,12 @@
     </div>
   {% endif %}
 
+  {% if category.description %}
+    <div class="prose-content surface mb-8 rounded-2xl p-6 text-slate-700 dark:text-slate-300" data-reveal>
+      {{ category.description|safe }}
+    </div>
+  {% endif %}
+
   {% if documents or links %}
     {% include "content/partials/filter_box.html" %}
     <div data-filter-list class="grid grid-cols-1 gap-4 lg:grid-cols-2">
