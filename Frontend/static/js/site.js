@@ -147,15 +147,19 @@ function setUpReveal() {
     if (!el.classList.contains("is-visible")) observer.observe(el);
   });
 
-  // Safety net. Content that is merely animated must never end up permanently
-  // invisible — if the observer misses an element (an odd layout, a page
-  // restored from the back/forward cache, a browser quirk), show it anyway.
+  // Safety net, for content that is on screen yet somehow still hidden — a
+  // layout the observer misjudged, a page restored from the back/forward
+  // cache. It deliberately looks only at what is *actually* in the viewport:
+  // an earlier version swept everything within 1.5 screens, which revealed
+  // the next section before the visitor ever scrolled to it and made the
+  // effect invisible.
   setTimeout(() => {
     document.querySelectorAll("[data-reveal]:not(.is-visible)").forEach((el) => {
       const box = el.getBoundingClientRect();
-      if (box.top < window.innerHeight * 1.5) el.classList.add("is-visible");
+      const onScreen = box.top < window.innerHeight && box.bottom > 0;
+      if (onScreen) el.classList.add("is-visible");
     });
-  }, 1200);
+  }, 1500);
 }
 
 // ---------------------------------------------------------------------------

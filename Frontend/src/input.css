@@ -100,7 +100,13 @@
   @keyframes nk-reveal {
     from {
       opacity: 0;
-      translate: 0 25px;
+      translate: 0 28px;
+      scale: 0.985;
+    }
+    /* Opacity finishes early so the element is readable while it is still
+       settling — the movement is what you notice, not a lingering fade. */
+    60% {
+      opacity: 1;
     }
   }
   [data-reveal] {
@@ -113,7 +119,11 @@
        elements also carry Tailwind's `transition` utility for their hover
        lift, and that utility wins the cascade, which was cutting a
        transition-based reveal down to its own 150ms. */
-    animation: nk-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    /* easeOutCubic, not the expo curve this used to have: expo covers ~90% of
+       the distance in the first 200ms, so the remaining 400ms is imperceptible
+       drift and the whole thing reads as an instant jump. This spreads the
+       movement across the full duration, which is what makes it visible. */
+    animation: nk-reveal 0.65s cubic-bezier(0.215, 0.61, 0.355, 1);
   }
   /* Already on screen when the page loaded: show it at once. Animating content
      the visitor is looking at only delays it and reads as a slow page. */
