@@ -121,16 +121,33 @@ function setUpReveal() {
   });
 
   const STAGGER = 110; // ms between neighbours arriving together
+  const MAX_CHAIN = 440; // …but the whole group must not take longer than this
 
   const observer = new IntersectionObserver(
     (entries) => {
       // Everything that came into view in this pass, in document order, so a
       // row of cards arrives one after another instead of all at once.
       const arriving = entries.filter((entry) => entry.isIntersecting);
+      // A long list entering at once would otherwise leave the last card
+      // waiting the better part of two seconds, which reads as a stall rather
+      // than a sequence. Tighten the gap instead of dropping it.
+      const step = arriving.length > 1
+        ? Math.min(STAGGER, MAX_CHAIN / (arriving.length - 1))
+        : 0;
+
       arriving.forEach((entry, index) => {
         const explicit = entry.target.dataset.revealDelay;
-        const delay = explicit !== undefined ? Number(explicit) : index * STAGGER;
-        setTimeout(() => entry.target.classList.add("is-visible"), delay);
+        const delay = explicit !== undefined ? Number(explicit) : index * step;
+        // Warn the compositor a transform is coming, so the first frame does
+        // not hitch; drop the hint once it has played.
+        entry.target.style.willChange = "opacity, translate";
+        setTimeout(() => {
+          entry.target.classList.add("is-visible");
+          entry.target.addEventListener(
+            "animationend", () => { entry.target.style.willChange = ""; },
+            { once: true }
+          );
+        }, delay);
         observer.unobserve(entry.target);
       });
     },
