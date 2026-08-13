@@ -4,6 +4,7 @@ Uploads are written to a throwaway PROTECTED_MEDIA_ROOT so a test run never
 touches the real protected_media/ directory.
 """
 
+import re
 import shutil
 import tempfile
 from io import StringIO
@@ -326,6 +327,62 @@ class StaticAssetTests(TestCase):
         for name in ("js/theme.js", "js/site.js", "js/hero.js", "js/htmx.min.js"):
             with self.subTest(name=name):
                 self.assertIsNotNone(finders.find(name), f"{name} is missing")
+
+
+class InteractionTests(ProtectedMediaTestCase):
+    """Markup the front-end behaviour depends on."""
+
+    def make_documents(self, how_many=3):
+        category = Category.objects.create(name="Θέματα", section=Section.PANELLINIES)
+        for index in range(how_many):
+            Document.objects.create(
+                title=f"Αρχείο {index}", category=category,
+                file=upload(f"a{index}.pdf", PDF_BYTES),
+            )
+        return category
+
+    def test_download_links_opt_out_of_boosted_navigation(self):
+        """A boosted link fetches into JS — the visitor would get no file."""
+        category = self.make_documents(1)
+        html = self.client.get(category.get_absolute_url()).content.decode()
+
+        for match in re.finditer(r"<a\b[^>]*/lipsi/\d+/[^>]*>", html):
+            with self.subTest(tag=match.group()):
+                self.assertIn('hx-boost="false"', match.group())
+
+    def test_material_pages_carry_the_filter_markup(self):
+        category = self.make_documents(3)
+        for url in (category.get_absolute_url(),
+                    reverse("content:section", args=[Section.PANELLINIES])):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertContains(response, "data-filter-input")
+                self.assertContains(response, "data-filter-list")
+                self.assertContains(response, "data-filter-item")
+
+    def test_the_filter_box_is_hidden_until_javascript_reveals_it(self):
+        category = self.make_documents(1)
+        html = self.client.get(category.get_absolute_url()).content.decode()
+
+        match = re.search(r'<div data-filter class="([^"]*)"', html)
+        self.assertIsNotNone(match, "filter wrapper not found")
+        self.assertIn("hidden", match.group(1))
+
+    def test_a_category_without_documents_offers_no_filter(self):
+        empty = Category.objects.create(name="Άδεια", section=Section.EBOOKS)
+        self.assertNotContains(self.client.get(empty.get_absolute_url()), "data-filter-input")
+
+    def test_pages_are_boosted_and_carry_the_progress_bar(self):
+        html = self.client.get(reverse("content:home")).content.decode()
+
+        self.assertIn('hx-boost="true"', html)
+        self.assertIn('id="page-progress"', html)
+        self.assertIn('id="back-to-top"', html)
+
+    def test_content_is_visible_without_javascript(self):
+        """no-js on <html> keeps revealed elements from staying invisible."""
+        html = self.client.get(reverse("content:home")).content.decode()
+        self.assertRegex(html, r"<html[^>]*\bno-js\b")
 
 
 class ThemeTests(TestCase):

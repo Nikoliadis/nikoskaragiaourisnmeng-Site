@@ -1,6 +1,14 @@
 // Hero slideshow: cross-fade every 6s, pause on hover, dots jump to a photo.
 // In a file rather than a <script> block so the CSP can forbid inline scripts.
-(function () {
+//
+// Exposed as window.initHero so site.js can start it again after htmx has
+// swapped in a new page; the timer from the previous page is cleared first.
+window.initHero = function () {
+  if (window.__heroTimer) {
+    clearInterval(window.__heroTimer);
+    window.__heroTimer = null;
+  }
+
   const slides = document.querySelectorAll("[data-hero-slide]");
   const dots = document.querySelectorAll("[data-hero-dot]");
   if (slides.length < 2) return;
@@ -25,6 +33,7 @@
   function stop() {
     if (timer) clearInterval(timer);
     timer = null;
+    window.__heroTimer = null;
   }
 
   function start() {
@@ -32,6 +41,7 @@
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     stop();
     timer = setInterval(() => show(current + 1), DELAY);
+    window.__heroTimer = timer;
   }
 
   dots.forEach((dot, index) =>
@@ -50,4 +60,10 @@
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
 
   start();
-})();
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", window.initHero);
+} else {
+  window.initHero();
+}

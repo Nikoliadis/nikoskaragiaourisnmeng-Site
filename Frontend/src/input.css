@@ -50,6 +50,13 @@
     @apply antialiased bg-slate-50 text-slate-800
            dark:bg-slate-950 dark:text-slate-300;
   }
+
+  /* A visible ring for keyboard users on every control, without drawing one
+     for mouse users on every click. */
+  :where(a, button, input, textarea, select):focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2
+           ring-offset-slate-50 dark:ring-offset-slate-950;
+  }
 }
 
 @layer components {
@@ -68,14 +75,73 @@
   .btn-primary {
     @apply inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5
            font-medium text-white shadow-sm transition hover:bg-brand-700
-           focus:outline-none focus:ring-2 focus:ring-brand-300;
+           hover:shadow-md active:scale-[0.97];
   }
   .btn-ghost {
     @apply inline-flex items-center gap-2 rounded-lg border border-slate-300
            bg-white px-5 py-2.5 font-medium text-slate-700 transition
            hover:border-brand-400 hover:text-brand-700
            dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200
-           dark:hover:border-brand-500 dark:hover:text-brand-400;
+           dark:hover:border-brand-500 dark:hover:text-brand-400
+           active:scale-[0.97];
+  }
+
+  /* ---- Motion ----------------------------------------------------------
+     Elements marked data-reveal start slightly offset and fade in when they
+     scroll into view; static/js/site.js adds .is-visible. If JavaScript never
+     runs, or the visitor asked for less motion, they are simply visible. */
+  [data-reveal] {
+    @apply opacity-0 translate-y-4;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+  [data-reveal].is-visible {
+    @apply opacity-100 translate-y-0;
+  }
+  .no-js [data-reveal] {
+    @apply opacity-100 translate-y-0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+      @apply opacity-100 translate-y-0;
+      transition: none;
+    }
+  }
+
+  /* The chevron in a navbar dropdown points down, and up while open. */
+  [data-dropdown] button .material-symbols-outlined {
+    transition: transform 0.2s ease-out;
+  }
+  [data-dropdown].is-open button .material-symbols-outlined {
+    transform: rotate(180deg);
+  }
+
+  /* Thin progress bar shown while htmx fetches the next page. */
+  #page-progress {
+    @apply pointer-events-none fixed inset-x-0 top-0 z-[60] h-0.5 bg-brand-500;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s ease-out, opacity 0.3s ease-out;
+    opacity: 0;
+  }
+  #page-progress.is-loading {
+    transform: scaleX(0.7);
+    opacity: 1;
+  }
+  #page-progress.is-done {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+
+  /* Back-to-top button, hidden until the visitor has scrolled a screenful. */
+  #back-to-top {
+    @apply fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center
+           rounded-full border border-slate-200 bg-white text-slate-600 shadow-lg
+           transition hover:text-brand-700 dark:border-slate-700
+           dark:bg-slate-800 dark:text-slate-300 dark:hover:text-brand-400;
+    @apply pointer-events-none translate-y-3 opacity-0;
+  }
+  #back-to-top.is-visible {
+    @apply pointer-events-auto translate-y-0 opacity-100;
   }
 
   /* Cards, panels and anything else that sits on the page background. */

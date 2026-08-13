@@ -1,6 +1,11 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="el" class="h-full">
+{% comment %}
+  no-js is removed by site.js the moment it runs. Anything that would be
+  invisible without JavaScript (the reveal animation) keys off it, so a visitor
+  with scripts blocked sees the content rather than a blank page.
+{% endcomment %}
+<html lang="el" class="h-full no-js">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,7 +32,14 @@
   {% endcomment %}
   <script src="{% static 'js/theme.js' %}"></script>
 </head>
-<body class="flex min-h-full flex-col font-sans">
+{% comment %}
+  hx-boost turns ordinary links into background fetches, so moving between
+  pages keeps the scroll position and never flashes white. Downloads opt out
+  individually — fetching a PDF through JavaScript would not save it.
+{% endcomment %}
+<body class="flex min-h-full flex-col font-sans" hx-boost="true">
+  <div id="page-progress" aria-hidden="true"></div>
+
   {% include "partials/navbar.html" %}
 
   <main class="flex-1">
@@ -42,6 +54,10 @@
   </main>
 
   {% include "partials/footer.html" %}
+
+  <button id="back-to-top" type="button" aria-label="Επιστροφή στην κορυφή" title="Επιστροφή στην κορυφή">
+    <span class="material-symbols-outlined">arrow_upward</span>
+  </button>
 
   {% comment %}
     Both scripts are served from this origin: no CDN to be compromised and no

@@ -43,7 +43,7 @@
 <section class="container-page -mt-10 relative z-10">
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for card in cards %}
-      <a href="{% url 'content:section' section=card.section %}" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
+      <a href="{% url 'content:section' section=card.section %}" data-reveal data-reveal-delay="{{ forloop.counter0 }}00" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg active:scale-[0.99] dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
         <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition dark:bg-slate-800 dark:text-brand-400">
           <span class="material-symbols-outlined">{{ card.icon }}</span>
         </div>
@@ -51,7 +51,7 @@
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Δες & κατέβασε υλικό</p>
       </a>
     {% endfor %}
-    <a href="{% url 'content:contact' %}" class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
+    <a href="{% url 'content:contact' %}" data-reveal class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg active:scale-[0.99] dark:bg-slate-900 dark:border-slate-800 dark:hover:border-brand-600">
       <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition dark:bg-slate-800 dark:text-brand-400">
         <span class="material-symbols-outlined">mail</span>
       </div>
@@ -70,7 +70,7 @@
   </div>
   <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
     {% for a in announcements %}
-      <a href="{{ a.get_absolute_url }}" class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:shadow-md dark:bg-slate-900 dark:border-slate-800">
+      <a href="{{ a.get_absolute_url }}" data-reveal data-reveal-delay="{{ forloop.counter0 }}00" class="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-900 dark:border-slate-800">
         {% if a.image %}<img src="{{ a.image.url }}" alt="{{ a.title }}" class="h-40 w-full object-cover">{% endif %}
         <div class="flex flex-1 flex-col p-5">
           <time class="text-xs text-slate-400 dark:text-slate-500">{{ a.created_at|date:"d/m/Y" }}</time>
