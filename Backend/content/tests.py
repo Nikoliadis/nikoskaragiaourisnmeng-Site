@@ -539,6 +539,23 @@ class ProfileTests(TestCase):
         self.assertNotContains(response, "img/profile.jpg")
 
 
+class FooterCreditTests(TestCase):
+    """The developer credit, on every page."""
+
+    def test_the_credit_links_to_the_developer(self):
+        for url in (reverse("content:home"), reverse("content:contact")):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertContains(response, "Νικόλαος Νικολιάδης")
+                self.assertContains(response, "mailto:nnikoliadis2005@gmail.com")
+
+    def test_the_teacher_keeps_the_copyright(self):
+        """Two different people in that footer — do not let them merge."""
+        body = self.client.get(reverse("content:home")).content.decode()
+        copyright_line = body[body.index("©"):]
+        self.assertIn("Νικόλαος Καραγκιαούρης", copyright_line[:120])
+
+
 class SocialAndSharingTests(TestCase):
     ACCOUNTS = (
         "https://www.instagram.com/nick_vehicle_dynamics/",
