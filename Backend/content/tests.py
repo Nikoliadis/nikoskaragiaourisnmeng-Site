@@ -245,6 +245,56 @@ class PageTests(TestCase):
         self.assertEqual(self.client.get("/kati-allo/").status_code, 404)
 
 
+class SectionCountTests(ProtectedMediaTestCase):
+    """The count under each card on a section page.
+
+    It used to count documents only, so a category holding nothing but links —
+    which is most of them, after the import — advertised itself as "0 αρχεία".
+    """
+
+    def setUp(self):
+        self.root = Category.objects.create(
+            name="Χρήσιμα", section=Section.XRISIMA
+        )
+        self.child = Category.objects.create(
+            name="Υποκατηγορία", section=Section.XRISIMA, parent=self.root
+        )
+        self.url = reverse("content:section", args=[Section.XRISIMA])
+
+    def counted(self):
+        (card,) = self.client.get(self.url).context["roots"]
+        return card.item_count, card.item_label
+
+    def test_links_are_counted_too(self):
+        Link.objects.create(category=self.root, title="Ένα", url="https://a.gr/")
+        Link.objects.create(category=self.root, title="Δύο", url="https://b.gr/")
+        self.assertEqual(self.counted(), (2, "σύνδεσμοι"))
+
+    def test_links_in_a_subcategory_count_towards_the_parent(self):
+        Link.objects.create(category=self.child, title="Ένα", url="https://a.gr/")
+        self.assertEqual(self.counted(), (1, "σύνδεσμος"))
+
+    def test_files_and_links_together_are_called_items(self):
+        Link.objects.create(category=self.root, title="Ένα", url="https://a.gr/")
+        self.make_document(category=self.root)
+        self.assertEqual(self.counted(), (2, "στοιχεία"))
+
+    def test_documents_alone_are_still_called_files(self):
+        self.make_document(category=self.root)
+        self.assertEqual(self.counted(), (1, "αρχείο"))
+
+    def test_hidden_material_is_not_counted(self):
+        Link.objects.create(
+            category=self.root, title="Κρυφό", url="https://a.gr/", is_active=False
+        )
+        self.assertEqual(self.counted(), (0, "Χωρίς υλικό ακόμη"))
+
+    def test_an_empty_category_says_so_instead_of_zero(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, "Χωρίς υλικό ακόμη")
+        self.assertNotContains(response, "0 αρχεί")
+
+
 class SecurityHeaderTests(TestCase):
     def test_public_page_carries_a_strict_csp(self):
         csp = self.client.get(reverse("content:home"))["Content-Security-Policy"]
@@ -467,6 +517,24 @@ class ProfileTests(TestCase):
         for page in (reverse("content:home"), reverse("content:contact")):
             with self.subTest(page=page):
                 self.assertContains(self.client.get(page), f'href="{url}"')
+
+    def test_the_portrait_appears_when_the_photo_is_on_disk(self):
+        from unittest.mock import patch
+
+        with patch("content.views.finders.find", return_value="/anywhere/profile.jpg"):
+            response = self.client.get(reverse("content:profile"))
+        self.assertContains(response, "img/profile.jpg")
+        self.assertContains(response, 'alt="Ο Νικόλαος Καραγκιαούρης"')
+
+    def test_a_missing_photo_leaves_the_page_standing(self):
+        """Guarded on purpose: under ManifestStaticFilesStorage a {% static %}
+        pointing at a file that isn't there raises, taking the page down."""
+        from unittest.mock import patch
+
+        with patch("content.views.finders.find", return_value=None):
+            response = self.client.get(reverse("content:profile"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "img/profile.jpg")
 
 
 class SocialAndSharingTests(TestCase):

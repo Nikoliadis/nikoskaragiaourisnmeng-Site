@@ -20,7 +20,11 @@
           <div>
             <h2 class="font-semibold text-slate-900 group-hover:text-brand-700 dark:text-slate-100">{{ cat.name }}</h2>
             <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-              <span data-count="{{ cat.doc_count }}">{{ cat.doc_count }}</span> αρχεί{{ cat.doc_count|pluralize:"ο,α" }}
+              {% if cat.item_count %}
+                <span data-count="{{ cat.item_count }}">{{ cat.item_count }}</span> {{ cat.item_label }}
+              {% else %}
+                {{ cat.item_label }}
+              {% endif %}
               {% if cat.children.count %}· {{ cat.children.count }} υποκατηγορ{{ cat.children.count|pluralize:"ία,ίες" }}{% endif %}
             </p>
           </div>

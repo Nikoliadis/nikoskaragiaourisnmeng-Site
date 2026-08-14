@@ -2,10 +2,11 @@ import logging
 from pathlib import Path
 
 from django.contrib import messages
+from django.contrib.staticfiles import finders
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext
 from django_ratelimit.decorators import ratelimit
 
 from .forms import ContactForm
@@ -47,6 +48,22 @@ HERO_SLIDES = [
 ]
 
 
+# The teacher's portrait on the profile page. Drop the photo into
+# Frontend/static/img/ under any of these names and it appears; leave it out
+# and the page renders without it.
+PORTRAIT_CANDIDATES = ("img/profile.jpg", "img/profile.jpeg", "img/profile.png", "img/profile.webp")
+
+
+def _portrait():
+    """The portrait's static path, or None if the photo hasn't been added.
+
+    Checked rather than assumed: under ManifestStaticFilesStorage a {% static %}
+    pointing at a file that isn't there raises at render time, so an absent
+    photo would take the whole page down instead of simply not showing.
+    """
+    return next((path for path in PORTRAIT_CANDIDATES if finders.find(path)), None)
+
+
 def _active_documents(category):
     """All visible documents in a category and its direct subcategories."""
     return (
@@ -86,11 +103,42 @@ def section_view(request, section):
     if section not in Section.values:
         raise Http404
     label = Section(section).label
+    # A category page shows uploaded files *and* links, from the category and
+    # its subcategories. Counting only its own documents made every category
+    # here read "0 αρχεία" even when it held a dozen links.
     roots = (
         Category.objects.filter(section=section, parent__isnull=True, is_active=True)
-        .annotate(doc_count=Count("documents", filter=Q(documents__is_active=True)))
+        .annotate(
+            doc_count=Count(
+                "documents", filter=Q(documents__is_active=True), distinct=True
+            ),
+            link_count=Count("links", filter=Q(links__is_active=True), distinct=True),
+            child_doc_count=Count(
+                "children__documents",
+                filter=Q(children__documents__is_active=True),
+                distinct=True,
+            ),
+            child_link_count=Count(
+                "children__links",
+                filter=Q(children__links__is_active=True),
+                distinct=True,
+            ),
+        )
         .prefetch_related("children")
     )
+    for root in roots:
+        files = root.doc_count + root.child_doc_count
+        links_here = root.link_count + root.child_link_count
+        root.item_count = files + links_here
+        # Say what the things actually are rather than calling a link a file.
+        if root.item_count == 0:
+            root.item_label = _("Χωρίς υλικό ακόμη")
+        elif not links_here:
+            root.item_label = ngettext("αρχείο", "αρχεία", files)
+        elif not files:
+            root.item_label = ngettext("σύνδεσμος", "σύνδεσμοι", links_here)
+        else:
+            root.item_label = ngettext("στοιχείο", "στοιχεία", root.item_count)
     loose_docs = Document.objects.filter(
         is_active=True, category__section=section
     ).select_related("category")[:100]
@@ -139,7 +187,11 @@ def profile(request):
         _("SAP R/3"),
         _("Αγγλικά"),
     ]
-    return render(request, "content/profile.html", {"specialisations": specialisations})
+    return render(
+        request,
+        "content/profile.html",
+        {"specialisations": specialisations, "portrait": _portrait()},
+    )
 
 
 def announcements(request):

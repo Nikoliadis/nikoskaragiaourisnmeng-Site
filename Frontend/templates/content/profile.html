@@ -11,9 +11,22 @@
       <a href="{% url 'content:home' %}" class="hover:text-brand-600 dark:hover:text-brand-400">Αρχική</a> /
       <span class="text-slate-600 dark:text-slate-300">Ποιος είμαι</span>
     </nav>
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</h1>
-    <p class="mt-1 text-lg text-brand-600 dark:text-brand-400">Ναυπηγός και Μηχανολόγος Μηχανικός</p>
-    <div class="mt-4">{% include "partials/social_links.html" %}</div>
+    <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
+      {% if portrait %}
+        {% comment %}
+          Eager, not lazy: this sits at the very top of the page, so deferring it
+          only guarantees the visitor watches it pop in.
+        {% endcomment %}
+        <img src="{% static portrait %}" alt="Ο Νικόλαος Καραγκιαούρης"
+             width="160" height="160" decoding="async"
+             class="h-28 w-28 shrink-0 rounded-full object-cover shadow-md ring-4 ring-white sm:h-36 sm:w-36 dark:ring-slate-800">
+      {% endif %}
+      <div>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Νικόλαος Καραγκιαούρης</h1>
+        <p class="mt-1 text-lg text-brand-600 dark:text-brand-400">Ναυπηγός και Μηχανολόγος Μηχανικός</p>
+        <div class="mt-4">{% include "partials/social_links.html" %}</div>
+      </div>
+    </div>
   </div>
 </div>
 
