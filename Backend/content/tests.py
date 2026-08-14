@@ -473,6 +473,8 @@ class SocialAndSharingTests(TestCase):
     ACCOUNTS = (
         "https://www.instagram.com/nick_vehicle_dynamics/",
         "https://www.tiktok.com/@nikos.vehicle.dyn",
+        "https://www.facebook.com/profile.php?id=100021367522617",
+        "https://www.linkedin.com/in/nikolaos-karagkiaouris-68620642/",
     )
 
     def test_social_links_open_safely_in_a_new_tab(self):
@@ -482,7 +484,8 @@ class SocialAndSharingTests(TestCase):
             with self.subTest(url=url):
                 self.assertIn(url, html)
         # rel=noopener stops the opened page reaching back into this one.
-        for match in re.finditer(r'<a[^>]+(?:instagram|tiktok)\.com[^>]*>', html):
+        pattern = r'<a[^>]+(?:instagram|tiktok|facebook|linkedin)\.com[^>]*>'
+        for match in re.finditer(pattern, html):
             with self.subTest(tag=match.group()[:80]):
                 self.assertIn('target="_blank"', match.group())
                 self.assertIn("noopener", match.group())
