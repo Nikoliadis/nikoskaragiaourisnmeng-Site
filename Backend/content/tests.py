@@ -10,6 +10,8 @@ import tempfile
 from io import StringIO
 from pathlib import Path
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -823,6 +825,27 @@ class MenuTests(TestCase):
             ["panellinies", "ebooks", "askiseis", "xrisima", "tritovathmia"],
         )
 
+    def test_the_question_bank_credits_the_iep(self):
+        """Required by the terms the material is published under, not optional."""
+        bank = Category.objects.get(name="ΤΡΑΠΕΖΑ ΘΕΜΑΤΩΝ")
+        for expected in ("Ι.Ε.Π.", "Ινστιτούτου Εκπαιδευτικής Πολιτικής"):
+            self.assertIn(expected, bank.description)
+        self.assertIn("trapeza.iep.edu.gr", bank.description)
+
+        page = self.client.get(bank.get_absolute_url())
+        self.assertContains(page, "Ινστιτούτου Εκπαιδευτικής Πολιτικής")
+        # The sanitiser must not have eaten the link on the way to the page.
+        self.assertContains(page, 'href="https://trapeza.iep.edu.gr/"')
+        self.assertContains(page, "noopener")
+
+    def test_rerunning_does_not_rewrite_the_credit(self):
+        """The text is stored sanitised, so a naive compare would resave forever."""
+        bank = Category.objects.get(name="ΤΡΑΠΕΖΑ ΘΕΜΑΤΩΝ")
+        before = bank.description
+        call_command("setup_menu", stdout=StringIO())
+        bank.refresh_from_db()
+        self.assertEqual(bank.description, before)
+
     def test_command_creates_the_whole_tree(self):
         expected = sum(1 + len(children) for roots in MENU.values() for _, children in roots)
         self.assertEqual(Category.objects.count(), expected)
@@ -870,3 +893,82 @@ class MenuTests(TestCase):
                 self.assertEqual(
                     self.client.get(category.get_absolute_url()).status_code, 200
                 )
+
+
+class AdminLoginRedirectTests(TestCase):
+    """Where the admin drops you after a successful login.
+
+    Django's default LOGIN_REDIRECT_URL is /accounts/profile/, a URL this
+    project never defines — so whenever the sign-in form arrives without a
+    ?next=, the teacher logs in and lands on a 404.
+    """
+
+    CREDENTIALS = {"username": "Karag", "password": "x" * 20}
+
+    def setUp(self):
+        get_user_model().objects.create_superuser(
+            self.CREDENTIALS["username"], "k@example.gr", self.CREDENTIALS["password"]
+        )
+
+    def test_login_lands_on_the_dashboard(self):
+        response = self.client.post(
+            "/admin/login/?next=/admin/", {**self.CREDENTIALS, "next": "/admin/"}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/admin/")
+
+    def test_the_fallback_page_actually_exists(self):
+        """The redirect used when the form carries no ?next= at all."""
+        self.client.force_login(get_user_model().objects.get(username="Karag"))
+        self.assertEqual(
+            self.client.get(settings.LOGIN_REDIRECT_URL).status_code, 200
+        )
+
+    def test_logout_returns_to_the_public_site(self):
+        self.assertEqual(settings.LOGOUT_REDIRECT_URL, "/")
+        self.assertEqual(self.client.get(settings.LOGOUT_REDIRECT_URL).status_code, 200)
+
+
+class ReverseProxyTests(TestCase):
+    """Behind nginx there is no TCP peer, so REMOTE_ADDR arrives empty.
+
+    django-ratelimit refuses to guess in that case and raises, which turned
+    every contact-form submission into a 500 the moment the site went behind a
+    unix socket. Nothing catches this locally, where runserver talks TCP.
+    """
+
+    PAYLOAD = {
+        "name": "Νίκος",
+        "email": "test@example.gr",
+        "message": "Δοκιμαστικό μήνυμα από τη φόρμα επικοινωνίας.",
+    }
+
+    @override_settings(RATELIMIT_IP_META_KEY="HTTP_X_REAL_IP")
+    def test_submission_survives_an_empty_remote_addr(self):
+        response = self.client.post(
+            reverse("content:contact"),
+            self.PAYLOAD,
+            REMOTE_ADDR="",
+            HTTP_X_REAL_IP="203.0.113.9",
+        )
+        self.assertIn(response.status_code, (200, 302))
+        self.assertEqual(ContactMessage.objects.count(), 1)
+
+    @override_settings(RATELIMIT_IP_META_KEY="HTTP_X_REAL_IP")
+    def test_visitors_behind_the_proxy_are_throttled_apart(self):
+        """One flooder must not lock out everyone else sharing the proxy."""
+        for i in range(6):
+            self.client.post(
+                reverse("content:contact"),
+                {**self.PAYLOAD, "message": f"Μήνυμα {i} με αρκετό κείμενο μέσα."},
+                REMOTE_ADDR="",
+                HTTP_X_REAL_IP="203.0.113.1",
+            )
+        after_flood = ContactMessage.objects.count()
+        self.client.post(
+            reverse("content:contact"),
+            {**self.PAYLOAD, "message": "Άλλος επισκέπτης, εντελώς άλλη IP."},
+            REMOTE_ADDR="",
+            HTTP_X_REAL_IP="203.0.113.2",
+        )
+        self.assertEqual(ContactMessage.objects.count(), after_flood + 1)

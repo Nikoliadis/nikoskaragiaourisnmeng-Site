@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models import ProtectedError
 
 from content.models import Category, Section
+from content.sanitizer import clean_html
 
 # section -> [(root category, [subcategories])] in menu order.
 MENU = {
@@ -40,6 +41,21 @@ MENU = {
         ("ΠΑΝΕΠΙΣΤΗΜΙΑ", ["ΠΡΟΠΤΥΧΙΑΚΑ", "ΜΕΤΑΠΤΥΧΙΑΚΑ"]),
         ("ΑΚΑΔΗΜΙΕΣ ΕΜΠΟΡΙΚΟΥ ΝΑΥΤΙΚΟΥ", []),
     ],
+}
+
+# Υλικό που ανήκει σε άλλον πρέπει να λέει σε ποιον. Η Τράπεζα Θεμάτων είναι
+# του Ι.Ε.Π. και η αναφορά της πηγής είναι όρος χρήσης, όχι ευγένεια — γι' αυτό
+# ζει εδώ, στον κώδικα, και όχι σε ένα πεδίο που μπορεί κάποιος να σβήσει κατά
+# λάθος από το admin.
+# Το target="_blank" λείπει σκόπιμα: ο sanitiser το αφαιρεί ούτως ή άλλως.
+NOTES = {
+    (Section.ASKISEIS, "ΤΡΑΠΕΖΑ ΘΕΜΑΤΩΝ"): (
+        "<p>Τα θέματα προέρχονται από την <strong>Τράπεζα Θεμάτων Διαβαθμισμένης "
+        "Δυσκολίας</strong> του <strong>Ινστιτούτου Εκπαιδευτικής Πολιτικής "
+        "(Ι.Ε.Π.)</strong> και αναδημοσιεύονται εδώ αποκλειστικά για εκπαιδευτική "
+        "χρήση. Επίσημη και πάντα ενημερωμένη πηγή: "
+        '<a href="https://trapeza.iep.edu.gr/">trapeza.iep.edu.gr</a>.</p>'
+    ),
 }
 
 
@@ -81,16 +97,29 @@ class Command(BaseCommand):
                 )
 
     def _upsert(self, name, section, parent, order):
+        # Compared in sanitised form: the model cleans on save, so raw text would
+        # never match what came back and every run would look like a change.
+        note = clean_html(NOTES.get((section, name), ""))
         category, created = Category.objects.get_or_create(
             name=name,
             section=section,
             parent=parent,
-            defaults={"order": order, "is_active": True},
+            defaults={"order": order, "is_active": True, "description": note},
         )
-        if not created and (category.order != order or not category.is_active):
+        fields = []
+        if category.order != order:
             category.order = order
+            fields.append("order")
+        if not category.is_active:
             category.is_active = True
-            category.save(update_fields=["order", "is_active"])
+            fields.append("is_active")
+        # Only categories that declare a note here have their text managed; the
+        # rest keep whatever the import or the admin put there.
+        if note and category.description != note:
+            category.description = note
+            fields.append("description")
+        if not created and fields:
+            category.save(update_fields=fields)
         self.stdout.write(f"  {'+' if created else '='} {category}")
         return category
 

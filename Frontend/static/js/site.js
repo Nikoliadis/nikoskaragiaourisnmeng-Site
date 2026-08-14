@@ -72,6 +72,15 @@ function setUpFilter() {
 
   const haystacks = items.map((item) => normalise(item.textContent));
 
+  // Name the things for what they are: most categories here hold links, and
+  // calling a link a file is how the counts ended up lying in the first place.
+  const kinds = new Set(items.map((item) => item.dataset.kind));
+  const noun = (n) => {
+    if (kinds.size === 1 && kinds.has("link")) return n === 1 ? "σύνδεσμος" : "σύνδεσμοι";
+    if (kinds.size === 1 && kinds.has("file")) return n === 1 ? "αρχείο" : "αρχεία";
+    return n === 1 ? "στοιχείο" : "στοιχεία";
+  };
+
   function apply() {
     const needle = normalise(box.value.trim());
     let shown = 0;
@@ -82,8 +91,8 @@ function setUpFilter() {
     });
     if (count) {
       count.textContent = needle
-        ? `${shown} από ${total} αρχεία`
-        : `${total} ${total === 1 ? "αρχείο" : "αρχεία"}`;
+        ? `${shown} από ${total} ${noun(total)}`
+        : `${total} ${noun(total)}`;
     }
     if (empty) empty.classList.toggle("hidden", shown !== 0);
   }

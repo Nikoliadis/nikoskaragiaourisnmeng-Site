@@ -51,27 +51,55 @@ PROTECTED_MEDIA_ROOT=/srv/karagiaouris/Database/protected_media
 ## 3. Δικαιώματα αρχείων
 
 ```bash
+# Ο nginx (www-data) διαβάζει ΜΟΝΟ τα στατικά.
+sudo chown -R karagiaouris:www-data /srv/karagiaouris/Frontend
+sudo chmod -R g+rX /srv/karagiaouris/Frontend
+
+# Η βάση και τα ανεβασμένα αρχεία μένουν στον χρήστη της εφαρμογής.
+sudo chown -R karagiaouris:karagiaouris /srv/karagiaouris/Database
 sudo chmod 750 /srv/karagiaouris/Database
 sudo chmod 750 /srv/karagiaouris/Database/protected_media
 sudo chmod 640 /srv/karagiaouris/Database/db.sqlite3
-sudo chown -R karagiaouris:www-data /srv/karagiaouris/Database
 ```
 
 Ο nginx **δεν** πρέπει να έχει πρόσβαση στο `protected_media/` — τα αρχεία
-φτάνουν στον χρήστη μόνο μέσω του Django.
+φτάνουν στον χρήστη μόνο μέσω του Django. Γι' αυτό το `Database/` ανήκει στον
+`karagiaouris` και **όχι** στο group `www-data`: το Django το γράφει ως
+ιδιοκτήτης, ο nginx δεν το φτάνει καν αν κάποτε γραφτεί λάθος `location`.
+
+Έλεγχος ότι όντως ισχύει:
+
+```bash
+sudo -u www-data test -r /srv/karagiaouris/Database/db.sqlite3 && echo ΠΡΟΒΛΗΜΑ || echo OK
+sudo -u www-data test -r /srv/karagiaouris/Frontend/staticfiles && echo OK || echo ΠΡΟΒΛΗΜΑ
+```
 
 ## 4. Βάση, στατικά, μενού
 
 ```bash
 cd /srv/karagiaouris/Backend
 sudo -u karagiaouris ../venv/bin/python manage.py migrate
-sudo -u karagiaouris ../venv/bin/python manage.py collectstatic --noinput
 sudo -u karagiaouris ../venv/bin/tailwindcss \
      -i ../Frontend/src/input.css -o ../Frontend/static/css/app.css --minify
+sudo -u karagiaouris ../venv/bin/python manage.py collectstatic --noinput
+sudo -u karagiaouris ../venv/bin/python manage.py setup_menu
+sudo -u karagiaouris ../venv/bin/python manage.py import_links
 sudo -u karagiaouris ../venv/bin/python manage.py check --deploy
 ```
 
-> Χτίσε το CSS **πριν** το `collectstatic`.
+> Χτίσε το CSS **πριν** το `collectstatic`, αλλιώς μαζεύεται το παλιό.
+
+**Μετά από κάθε `collectstatic` ξανατρέξε και τα δύο του βήματος 3:**
+
+```bash
+sudo chown -R karagiaouris:www-data /srv/karagiaouris/Frontend
+sudo chmod -R g+rX /srv/karagiaouris/Frontend
+```
+
+Το `sudo` τρέχει με umask 027, οπότε τα νέα αρχεία βγαίνουν 640 **και με group
+`karagiaouris`**. Σκέτο `chmod g+rX` δίνει τότε δικαιώματα σε λάθος group και ο
+nginx συνεχίζει να επιστρέφει **403 σε όλα τα CSS/JS/εικόνες** — η σελίδα
+φορτώνει σαν γυμνό HTML. Χρειάζονται **και** τα δύο, **και** με αυτή τη σειρά.
 
 ## 5. Gunicorn + nginx
 

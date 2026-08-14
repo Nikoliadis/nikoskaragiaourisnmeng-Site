@@ -113,6 +113,13 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+# The only login on this site is the admin. Django's default lands you on
+# /accounts/profile/, a URL nothing here defines — so whenever the sign-in form
+# arrives without a ?next=, the teacher logs in and gets a 404.
+LOGIN_URL = "/admin/login/"
+LOGIN_REDIRECT_URL = "/admin/"
+LOGOUT_REDIRECT_URL = "/"
+
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
@@ -347,6 +354,13 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     # Only trust this header when a reverse proxy you control sets it.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Gunicorn listens on a unix socket, so there is no TCP peer and
+    # REMOTE_ADDR arrives empty — django-ratelimit then raises rather than
+    # rate-limit everyone as one visitor, which took the contact form down with
+    # a 500 on every submission. nginx *overwrites* X-Real-IP on every request
+    # (proxy_set_header X-Real-IP $remote_addr), so a visitor cannot forge it,
+    # and nothing but nginx can reach the socket.
+    RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
 
 # ---------------------------------------------------------------------------
 # Email — notifications for messages sent from the contact form

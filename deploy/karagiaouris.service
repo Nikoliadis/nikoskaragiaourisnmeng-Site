@@ -10,10 +10,13 @@
 [Unit]
 Description=Gunicorn — Εκπαιδευτική ιστοσελίδα Ν. Καραγκιαούρη
 After=network.target
-Requires=karagiaouris.socket
 
 [Service]
 Type=notify
+# Το /run είναι tmpfs και αδειάζει σε κάθε reboot· έτσι ο φάκελος του socket
+# ξαναφτιάχνεται με τα σωστά δικαιώματα πριν ξεκινήσει το gunicorn.
+RuntimeDirectory=gunicorn
+RuntimeDirectoryMode=2750
 User=karagiaouris
 Group=www-data
 WorkingDirectory=/srv/karagiaouris/Backend
