@@ -82,6 +82,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # No django.contrib.sites alongside it on purpose: the sitemap view then
+    # takes the domain from the request instead of a Site row that would sit
+    # at example.com until someone remembered to change it.
+    "django.contrib.sitemaps",
     # Third-party
     "django_htmx",
     "csp",
@@ -133,6 +137,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "content.context_processors.navigation",
+                "content.branding.branding",
             ],
         },
     },

@@ -1,0 +1,46 @@
+{% load static %}
+{% comment %}
+  Schema.org data for search engines. This is what lets Google answer «ποιος
+  είναι ο Νικόλαος Καραγκιαούρης» with this site rather than guessing from the
+  page text — and `sameAs` is how it learns that the Instagram, TikTok,
+  Facebook and LinkedIn accounts are the same person as this one.
+
+  It is a <script> tag, but type="application/ld+json" is data, not code: the
+  browser never executes it, so the strict CSP leaves it alone. Verified on the
+  live site with the console open.
+
+  Everything here is already public on the page. Nothing from the private half
+  of the CV goes in.
+{% endcomment %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "{{ request.scheme }}://{{ request.get_host }}/#person",
+      "name": "Νικόλαος Καραγκιαούρης",
+      "alternateName": ["Nikolaos Karagkiaouris", "Νίκος Καραγκιαούρης"],
+      "jobTitle": "Ναυπηγός και Μηχανολόγος Μηχανικός",
+      "description": "Εκπαιδευτικός ΠΕ82 Μηχανολόγων. Διδάσκει μαθήματα ειδικότητας ΕΠΑΛ από το 2008 στους τομείς Μηχανολογίας, Οχημάτων, Ηλεκτρολογίας, Ηλεκτρονικής και Ναυτικού.",
+      "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'content:profile' %}",
+      {% if portrait %}"image": "{{ request.scheme }}://{{ request.get_host }}{% static portrait %}",{% endif %}
+      "knowsLanguage": ["el", "en"],
+      "sameAs": [
+        "https://www.instagram.com/nick_vehicle_dynamics/",
+        "https://www.tiktok.com/@nikos.vehicle.dyn",
+        "https://www.facebook.com/profile.php?id=100021367522617",
+        "https://www.linkedin.com/in/nikolaos-karagkiaouris-68620642/"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "{{ request.scheme }}://{{ request.get_host }}/#website",
+      "url": "{{ request.scheme }}://{{ request.get_host }}/",
+      "name": "Νικόλαος Καραγκιαούρης — Εκπαιδευτικό υλικό",
+      "inLanguage": "el",
+      "publisher": {"@id": "{{ request.scheme }}://{{ request.get_host }}/#person"}
+    }
+  ]
+}
+</script>

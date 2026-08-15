@@ -520,10 +520,15 @@ class ProfileTests(TestCase):
             with self.subTest(page=page):
                 self.assertContains(self.client.get(page), f'href="{url}"')
 
+    def setUp(self):
+        from content.branding import portrait_path
+
+        portrait_path.cache_clear()
+
     def test_the_portrait_appears_when_the_photo_is_on_disk(self):
         from unittest.mock import patch
 
-        with patch("content.views.finders.find", return_value="/anywhere/profile.jpg"):
+        with patch("content.branding.finders.find", return_value="/anywhere/profile.jpg"):
             response = self.client.get(reverse("content:profile"))
         self.assertContains(response, "img/profile.jpg")
         self.assertContains(response, 'alt="Ο Νικόλαος Καραγκιαούρης"')
@@ -533,10 +538,87 @@ class ProfileTests(TestCase):
         pointing at a file that isn't there raises, taking the page down."""
         from unittest.mock import patch
 
-        with patch("content.views.finders.find", return_value=None):
+        with patch("content.branding.finders.find", return_value=None):
             response = self.client.get(reverse("content:profile"))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "img/profile.jpg")
+
+
+class SearchEngineTests(TestCase):
+    """What a search engine needs to find the teacher by name.
+
+    None of this makes the site rank on its own — that takes time and links —
+    but without it Google cannot tell who the site is about, and indexes two
+    copies of every page because www and the bare domain both answer.
+    """
+
+    def setUp(self):
+        call_command("setup_menu", stdout=StringIO())
+
+    def test_robots_allows_crawling_and_points_at_the_sitemap(self):
+        response = self.client.get("/robots.txt")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/plain")
+        body = response.content.decode()
+        self.assertIn("Allow: /", body)
+        self.assertIn("/sitemap.xml", body)
+
+    def test_robots_keeps_crawlers_out_of_the_admin_and_downloads(self):
+        body = self.client.get("/robots.txt").content.decode()
+        self.assertIn("Disallow: /admin/", body)
+        self.assertIn("Disallow: /lipsi/", body)
+
+    def test_sitemap_lists_the_real_pages(self):
+        response = self.client.get("/sitemap.xml")
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        for url in (reverse("content:home"), reverse("content:profile")):
+            self.assertIn(f"<loc>https://testserver{url}</loc>", body)
+        # Every section, and at least one category from the menu.
+        for section in Section.values:
+            self.assertIn(reverse("content:section", args=[section]), body)
+        self.assertIn("/kateigoria/", body)
+
+    def test_sitemap_hides_what_robots_forbids(self):
+        body = self.client.get("/sitemap.xml").content.decode()
+        self.assertNotIn("/admin/", body)
+        self.assertNotIn("/lipsi/", body)
+
+    def test_hidden_categories_stay_out_of_the_sitemap(self):
+        hidden = Category.objects.filter(parent__isnull=True).first()
+        Category.objects.filter(pk=hidden.pk).update(is_active=False)
+        self.assertNotIn(
+            hidden.get_absolute_url(), self.client.get("/sitemap.xml").content.decode()
+        )
+
+    def test_every_page_declares_one_canonical_url(self):
+        for url in (reverse("content:home"), reverse("content:profile")):
+            with self.subTest(url=url):
+                body = self.client.get(url).content.decode()
+                self.assertEqual(body.count('rel="canonical"'), 1)
+                self.assertIn(f'href="http://testserver{url}"', body)
+
+    def test_the_person_is_described_for_search_engines(self):
+        body = self.client.get(reverse("content:home")).content.decode()
+        self.assertIn('type="application/ld+json"', body)
+        self.assertIn('"@type": "Person"', body)
+        self.assertIn("Νικόλαος Καραγκιαούρης", body)
+        self.assertIn("Nikolaos Karagkiaouris", body)  # the latin spelling too
+
+    def test_the_social_accounts_are_declared_as_the_same_person(self):
+        """sameAs is how Google ties the profiles to this site."""
+        body = self.client.get(reverse("content:home")).content.decode()
+        for account in SocialAndSharingTests.ACCOUNTS:
+            with self.subTest(account=account):
+                self.assertIn(account, body)
+
+    def test_the_structured_data_is_valid_json(self):
+        import json
+
+        body = self.client.get(reverse("content:home")).content.decode()
+        raw = body.split('type="application/ld+json">', 1)[1].split("</script>", 1)[0]
+        graph = json.loads(raw)["@graph"]
+        self.assertEqual({item["@type"] for item in graph}, {"Person", "WebSite"})
 
 
 class FooterCreditTests(TestCase):

@@ -12,6 +12,13 @@
   <title>{% block title %}Νικόλαος Καραγκιαούρης — Μηχανολόγος ΠΕ82{% endblock %}</title>
   <meta name="description" content="{% block description %}Εκπαιδευτικό υλικό Μηχανολογίας: πανελλαδικές εξετάσεις, ασκήσεις, e-books και ανακοινώσεις.{% endblock %}">
 
+  {% comment %}
+    Both www and the bare domain answer, so without this Google would see two
+    copies of every page and split the ranking between them. request.path, not
+    the full URI: query strings never make a different page here.
+  {% endcomment %}
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+
   <link rel="icon" href="{% static 'favicon_io/favicon.ico' %}" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon_io/favicon-32x32.png' %}">
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon_io/favicon-16x16.png' %}">
@@ -55,6 +62,8 @@
     paint, so a dark-mode visitor never sees a white flash.
   {% endcomment %}
   <script src="{% static 'js/theme.js' %}"></script>
+
+  {% include "partials/structured_data.html" %}
 </head>
 {% comment %}
   hx-boost turns ordinary links into background fetches, so moving between

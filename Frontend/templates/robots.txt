@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Το admin δεν έχει καμία δουλειά σε μηχανή αναζήτησης.
+Disallow: /admin/
+# Οι λήψεις αρχείων περνούν από έλεγχο και δεν είναι σελίδες προς καταχώρηση.
+Disallow: /lipsi/
+
+Sitemap: https://{{ request.get_host }}/sitemap.xml

@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 from django.contrib import messages
-from django.contrib.staticfiles import finders
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -46,22 +45,6 @@ HERO_SLIDES = [
     {"src": "img/hero/wind.jpg", "alt": _("Θαλάσσιο αιολικό πάρκο στο ηλιοβασίλεμα")},
     {"src": "img/hero/study.jpg", "alt": _("Μαθητής διαβάζει βιβλίο κρατώντας σημειώσεις")},
 ]
-
-
-# The teacher's portrait on the profile page. Drop the photo into
-# Frontend/static/img/ under any of these names and it appears; leave it out
-# and the page renders without it.
-PORTRAIT_CANDIDATES = ("img/profile.jpg", "img/profile.jpeg", "img/profile.png", "img/profile.webp")
-
-
-def _portrait():
-    """The portrait's static path, or None if the photo hasn't been added.
-
-    Checked rather than assumed: under ManifestStaticFilesStorage a {% static %}
-    pointing at a file that isn't there raises at render time, so an absent
-    photo would take the whole page down instead of simply not showing.
-    """
-    return next((path for path in PORTRAIT_CANDIDATES if finders.find(path)), None)
 
 
 def _active_documents(category):
@@ -190,7 +173,7 @@ def profile(request):
     return render(
         request,
         "content/profile.html",
-        {"specialisations": specialisations, "portrait": _portrait()},
+        {"specialisations": specialisations},  # portrait comes from the context processor
     )
 
 
