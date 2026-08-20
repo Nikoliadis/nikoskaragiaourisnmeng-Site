@@ -10,7 +10,7 @@ from django.views.generic import TemplateView
 from content.sitemaps import SITEMAPS
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path(f"{settings.ADMIN_PATH}/", admin.site.urls),
     # Both must sit at the domain root to be honoured by search engines.
     path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS}, name="django.contrib.sitemaps.views.sitemap"),
     path(

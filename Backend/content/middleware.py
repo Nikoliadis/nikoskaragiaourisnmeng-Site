@@ -57,7 +57,12 @@ class AdminAwareCSPMiddleware(CSPMiddleware):
     an attacker's domain is refused either way.
     """
 
-    admin_prefix = "/admin/"
+    # Derived, not hardcoded: with a renamed admin a literal "/admin/" would
+    # silently stop matching, and the admin would be served the strict public
+    # policy — a broken admin, with no error to explain why.
+    @property
+    def admin_prefix(self):
+        return f"/{settings.ADMIN_PATH}/"
 
     def get_policy_parts(self, request, response, report_only=False):
         parts = super().get_policy_parts(request, response, report_only=report_only)

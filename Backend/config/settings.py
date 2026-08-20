@@ -66,6 +66,14 @@ elif not SECRET_KEY:
     SECRET_KEY = "django-insecure-development-only-key-do-not-use-in-production"
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+
+# Where the admin lives. Read from the environment because this repository is
+# public: a path written here would be published to everyone, and an obscured
+# admin URL that anyone can look up is not obscured at all. Defaults to the
+# conventional "admin" so a fresh checkout behaves normally.
+# This is defence in depth against mass scanners, never a substitute for the
+# password hashing, lockout and rate limiting that actually protect the login.
+ADMIN_PATH = os.getenv("DJANGO_ADMIN_PATH", "admin").strip("/")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 # ---------------------------------------------------------------------------
@@ -120,8 +128,8 @@ AUTHENTICATION_BACKENDS = [
 # The only login on this site is the admin. Django's default lands you on
 # /accounts/profile/, a URL nothing here defines — so whenever the sign-in form
 # arrives without a ?next=, the teacher logs in and gets a 404.
-LOGIN_URL = "/admin/login/"
-LOGIN_REDIRECT_URL = "/admin/"
+LOGIN_URL = f"/{ADMIN_PATH}/login/"
+LOGIN_REDIRECT_URL = f"/{ADMIN_PATH}/"
 LOGOUT_REDIRECT_URL = "/"
 
 ROOT_URLCONF = "config.urls"

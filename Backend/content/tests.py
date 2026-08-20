@@ -544,6 +544,37 @@ class ProfileTests(TestCase):
         self.assertNotContains(response, "img/profile.jpg")
 
 
+class AdminPathTests(TestCase):
+    """The admin can be moved off /admin/ from the environment.
+
+    Obscurity, not security: the password hashing, the five-attempt lockout and
+    the nginx rate limit are what protect the login. This only keeps mass
+    scanners from finding the door, and it is worth nothing if the path is
+    written anywhere public — which is why it comes from .env and not from here.
+    """
+
+    def test_the_admin_answers_wherever_it_is_configured(self):
+        self.assertEqual(
+            self.client.get(f"/{settings.ADMIN_PATH}/").status_code, 302
+        )
+
+    def test_the_login_redirects_follow_the_configured_path(self):
+        self.assertTrue(settings.LOGIN_URL.startswith(f"/{settings.ADMIN_PATH}/"))
+        self.assertEqual(settings.LOGIN_REDIRECT_URL, f"/{settings.ADMIN_PATH}/")
+
+    def test_the_relaxed_admin_policy_follows_the_path_too(self):
+        """A hardcoded prefix would serve the admin the strict public CSP."""
+        from content.middleware import AdminAwareCSPMiddleware
+
+        middleware = AdminAwareCSPMiddleware(lambda request: None)
+        self.assertEqual(middleware.admin_prefix, f"/{settings.ADMIN_PATH}/")
+
+    def test_the_path_is_not_written_into_the_repository(self):
+        """It must come from the environment; this repo is public."""
+        source = (settings.BASE_DIR / "config" / "urls.py").read_text(encoding="utf-8")
+        self.assertIn("settings.ADMIN_PATH", source)
+
+
 class SearchEngineTests(TestCase):
     """What a search engine needs to find the teacher by name.
 
@@ -563,10 +594,14 @@ class SearchEngineTests(TestCase):
         self.assertIn("Allow: /", body)
         self.assertIn("/sitemap.xml", body)
 
-    def test_robots_keeps_crawlers_out_of_the_admin_and_downloads(self):
+    def test_robots_keeps_crawlers_out_of_the_downloads(self):
         body = self.client.get("/robots.txt").content.decode()
-        self.assertIn("Disallow: /admin/", body)
         self.assertIn("Disallow: /lipsi/", body)
+
+    def test_robots_does_not_advertise_the_admin(self):
+        """Anyone can read robots.txt, including the scanners we hide from."""
+        body = self.client.get("/robots.txt").content.decode()
+        self.assertNotIn(settings.ADMIN_PATH, body)
 
     def test_sitemap_lists_the_real_pages(self):
         response = self.client.get("/sitemap.xml")

@@ -107,10 +107,17 @@ nginx συνεχίζει να επιστρέφει **403 σε όλα τα CSS/JS
 sudo cp deploy/karagiaouris.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now karagiaouris
 
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/karagiaouris.gr
-sudo ln -s /etc/nginx/sites-available/karagiaouris.gr /etc/nginx/sites-enabled/
+# Το domain και η διαδρομή του admin μπαίνουν κατά την εγκατάσταση — καμία από
+# τις δύο δεν είναι γραμμένη στο repo.
+ADMIN=$(grep '^DJANGO_ADMIN_PATH=' /srv/karagiaouris/.env | cut -d= -f2)
+sed -e "s/karagiaouris\.gr/$DOMAIN/g" -e "s/__ADMIN_PATH__/${ADMIN:-admin}/g"     deploy/nginx.conf | sudo tee /etc/nginx/sites-available/$DOMAIN >/dev/null
+sudo ln -s /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+> Αν αλλάξεις τη διαδρομή του admin αργότερα, άλλαξέ τη **και εδώ**. Διαφορετικά
+> το `location` δείχνει σε διαδρομή που δεν υπάρχει, το όριο των 5 αιτημάτων/λεπτό
+> στο login παύει σιωπηλά να ισχύει, και μένεις με λιγότερη προστασία από πριν.
 
 Το snippet `django-proxy.conf` είναι στο τέλος του `nginx.conf` — φτιάξ' το στο
 `/etc/nginx/snippets/`.
