@@ -1,7 +1,7 @@
 # Core
-Django==6.0.7
+Django==6.0.8
 asgiref==3.12.1
-sqlparse==0.5.5
+sqlparse==0.6.0
 tzdata==2026.3
 python-dotenv==1.2.2
 
@@ -20,7 +20,9 @@ nh3==0.3.6                   # HTML sanitising for admin-written content
 filetype==1.2.0              # magic-byte sniffing for uploads
 
 # Data import
-openpyxl==3.1.5              # διαβάζει το ΙΣΤΟΣΕΛΙΔΑ.xlsx στο import_links
+# Kept ASCII on purpose: pip tooling reads this file with the system
+# encoding, and one non-ASCII byte makes pip-audit fail outright on Windows.
+openpyxl==3.1.5              # reads the links workbook in import_links
 
-# Production server — install on the server only:
+# Production server - install on the server only:
 #   pip install gunicorn==23.0.0

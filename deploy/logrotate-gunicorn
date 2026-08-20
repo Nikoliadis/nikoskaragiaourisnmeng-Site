@@ -1,0 +1,26 @@
+# Περιστροφή των log του Gunicorn.
+# Αντιγραφή σε /etc/logrotate.d/gunicorn (ιδιοκτήτης root, δικαιώματα 644).
+#
+# Ο nginx έχει δικό του logrotate από το πακέτο και το Django κάνει rotation
+# μόνο του (RotatingFileHandler), αλλά τα /var/log/gunicorn/*.log δεν τα
+# καλύπτει τίποτα — μεγαλώνουν χωρίς όριο μέχρι να γεμίσει ο δίσκος και να
+# πέσει η σελίδα.
+#
+# Το rotate 14 είναι και θέμα προσωπικών δεδομένων: το access log κρατά τη
+# διεύθυνση IP κάθε επισκέπτη, και δεν υπάρχει λόγος να τη φυλάμε για πάντα.
+/var/log/gunicorn/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 karagiaouris www-data
+    su root www-data
+    sharedscripts
+    postrotate
+        # Το Gunicorn ξανανοίγει τα αρχεία του με USR1 — χωρίς αυτό συνεχίζει
+        # να γράφει στο μετονομασμένο (πλέον αόρατο) αρχείο.
+        systemctl kill -s USR1 karagiaouris.service 2>/dev/null || true
+    endscript
+}

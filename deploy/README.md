@@ -165,6 +165,26 @@ AllowUsers <ο χρήστης σου>
 sudo systemctl restart ssh
 ```
 
+## 8β. Περιστροφή των log
+
+```bash
+sudo cp deploy/logrotate-gunicorn /etc/logrotate.d/gunicorn
+sudo chown root:root /etc/logrotate.d/gunicorn && sudo chmod 644 /etc/logrotate.d/gunicorn
+sudo logrotate -f /etc/logrotate.d/gunicorn      # δοκιμή
+```
+
+Ο nginx έχει δικό του logrotate από το πακέτο και το Django κάνει rotation μόνο
+του, αλλά τα `/var/log/gunicorn/*.log` δεν τα καλύπτει **τίποτα** — μεγαλώνουν
+μέχρι να γεμίσει ο δίσκος και να πέσει η σελίδα.
+
+Έλεγξε ότι το Gunicorn ξανάνοιξε τα αρχεία μετά την περιστροφή, αλλιώς γράφει
+σιωπηλά στο μετονομασμένο αρχείο και το καινούριο μένει άδειο:
+
+```bash
+curl -s -o /dev/null https://<domain>/ && sleep 2
+sudo tail -1 /var/log/gunicorn/access.log     # πρέπει να δείχνει το αίτημα
+```
+
 ## 9. Αυτόματες ενημερώσεις ασφαλείας
 
 ```bash
