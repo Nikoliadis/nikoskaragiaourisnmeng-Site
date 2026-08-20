@@ -37,35 +37,41 @@
   if (media.addEventListener) media.addEventListener("change", onSystemChange);
   else if (media.addListener) media.addListener(onSystemChange);
 
-  // The toggle buttons only exist once the body is parsed.
-  document.addEventListener("DOMContentLoaded", function () {
-    var buttons = document.querySelectorAll("[data-theme-toggle]");
-
-    function label() {
-      var isDark = root.dataset.theme === "dark";
-      buttons.forEach(function (button) {
-        button.setAttribute(
-          "aria-label",
-          isDark ? "Εναλλαγή σε φωτεινό θέμα" : "Εναλλαγή σε σκοτεινό θέμα"
-        );
-        button.setAttribute("title", button.getAttribute("aria-label"));
-        button.setAttribute("aria-pressed", String(isDark));
-      });
-    }
-
-    buttons.forEach(function (button) {
-      button.addEventListener("click", function () {
-        var next = root.dataset.theme === "dark" ? "light" : "dark";
-        apply(next);
-        try {
-          localStorage.setItem(STORAGE_KEY, next);
-        } catch (e) {
-          /* choice just won't persist */
-        }
-        label();
-      });
+  // Re-queried every time: hx-boost swaps the whole body, so the buttons held
+  // by a previous call are detached nodes that nobody can see any more.
+  function label() {
+    var isDark = root.dataset.theme === "dark";
+    document.querySelectorAll("[data-theme-toggle]").forEach(function (button) {
+      var text = isDark ? "Εναλλαγή σε φωτεινό θέμα" : "Εναλλαγή σε σκοτεινό θέμα";
+      button.setAttribute("aria-label", text);
+      button.setAttribute("title", text);
+      button.setAttribute("aria-pressed", String(isDark));
     });
+  }
 
+  // Delegated on document, not bound to the buttons themselves. hx-boost
+  // replaces the <body> on every in-site navigation and takes the buttons'
+  // listeners with it, so a directly bound toggle dies on the first menu click
+  // and only comes back on a hard refresh. document survives every swap, and
+  // one listener can never be attached twice.
+  document.addEventListener("click", function (event) {
+    var target = event.target;
+    if (!target || !target.closest) return;
+    var button = target.closest("[data-theme-toggle]");
+    if (!button) return;
+
+    var next = root.dataset.theme === "dark" ? "light" : "dark";
+    apply(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch (e) {
+      /* choice just won't persist */
+    }
     label();
   });
+
+  // The labels describe the *current* theme, and the buttons that arrive with
+  // a swapped body come from the server without that state.
+  document.addEventListener("DOMContentLoaded", label);
+  document.addEventListener("htmx:afterSwap", label);
 })();

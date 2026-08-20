@@ -737,6 +737,27 @@ class ThemeTests(TestCase):
         self.assertIn("dark_mode", html)
         self.assertIn("light_mode", html)
 
+    def test_the_toggle_survives_a_boosted_navigation(self):
+        """hx-boost swaps the whole body on every in-site click.
+
+        A listener bound straight to the button is thrown away with the old
+        body, so the toggle went dead after the first menu click and only came
+        back on a hard refresh. Delegating from document is what keeps it alive,
+        so this checks the handler is not bound to the buttons themselves.
+        """
+        script = (settings.FRONTEND_DIR / "static" / "js" / "theme.js").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('document.addEventListener("click"', script)
+        self.assertIn('closest("[data-theme-toggle]")', script)
+        # The labels still have to be refreshed for the buttons a swap brings in.
+        self.assertIn("htmx:afterSwap", script)
+
+    def test_the_body_really_is_boosted(self):
+        """The premise of the test above — if this ever changes, revisit it."""
+        self.assertContains(self.client.get(reverse("content:home")), 'hx-boost="true"')
+
     def test_theme_colour_meta_is_declared_for_both_schemes(self):
         html = self.client.get(reverse("content:home")).content.decode()
 
